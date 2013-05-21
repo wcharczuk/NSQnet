@@ -12,7 +12,7 @@ namespace NSQnet.Test
         [Fact]
         public void Constructor_Test()
         {
-            var client = new NSQClient("192.168.1.147", 4150);
+            var client = new NSQPublisher("192.168.1.147", 4150);
 
             Assert.NotNull(client);
         }

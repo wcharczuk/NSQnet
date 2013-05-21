@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace NSQnet
 {
-    public static class Response
+    public static class NSQResponseString
     {
+        public const String HEARTBEAT = "_heartbeat_";
         public const String OK = "OK";
         public const String E_INVALID = "E_INVALID";
         public const String E_TOUCH_FAILED = "E_TOUCH_FAILED";

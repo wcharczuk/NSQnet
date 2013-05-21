@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NSQnet
 {
-    public class NSQClient
+    public abstract class NSQClient
     {
-        public NSQClient() : base() 
+        public NSQClient()
         {
             _protocol = new NSQProtocol();
         }
@@ -22,31 +20,30 @@ namespace NSQnet
             _protocol.Port = port;
         }
 
-        public NSQClient(String hostname, Int32 port, Stream output) : this()
+        public NSQClient(String hostname, Int32 port, Stream output)
+            : this()
         {
             _protocol.Hostname = hostname;
             _protocol.Port = port;
             _protocol.OutputStream = output;
         }
 
-        private NSQProtocol _protocol = null;
+        protected NSQProtocol _protocol = null;
+
+        public TimeSpan ReadTimeout { get; set; }
+        public TimeSpan WriteTimeout { get; set; }
+
+        public String ShortIdentifier { get; set; }
+        public String LongIdentifier { get; set; }
+
+        public Int32 HeartbeatMilliseconds { get; private set; }
 
         public void Initialize()
         {
             _protocol.Initialize();
-        }
+            _protocol.Identify(this.ShortIdentifier, this.LongIdentifier, this.HeartbeatMilliseconds, false); 
+            //todo: in future, feature negotiation. test if response is json or not.
 
-        public Boolean Publish(String topic_name, Object data)
-        {
-            try
-            {
-                return _protocol.Publish(topic_name, data).Equals(Response.OK);
-            }
-            catch
-            {
-                return false;
-            }
         }
     }
 }
-

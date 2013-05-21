@@ -6,10 +6,5 @@ using System.Threading.Tasks;
 
 namespace NSQnet
 {
-    public struct Result
-    {
-        public Int32 Size;
-        public FrameType FrameType;
-        public String Body;
-    }
+    public delegate void NSQMessageRecievedHandler(object sender, NSQMessageEventArgs e);
 }
