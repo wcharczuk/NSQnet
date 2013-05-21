@@ -204,14 +204,13 @@ namespace NSQnet
             return result;
         }
 
-        public void Subscribe(String topic_name, String channel_name)
+        public NSQMessage Subscribe(String topic_name, String channel_name)
         {
             if (!CheckName(topic_name) || !CheckName(channel_name))
                 throw new ArgumentException("Bad Name");
 
             WriteAscii(String.Format("SUB {0} {1}\n", topic_name, channel_name));
-            //var result = GetNextMessage();
-            //return result;
+            return GetNextMessage();
         }
 
         public NSQMessage Publish(String topic_name, object data)
@@ -225,8 +224,7 @@ namespace NSQnet
             WriteAscii(String.Format("PUB {0}\n", topic_name));
             WriteBinary(bytes);
 
-            var result = GetNextMessage();
-            return result;
+            return GetNextMessage();
         }
 
         public NSQMessage MultiPublish(String topic_name, List<Object> data)
@@ -236,8 +234,24 @@ namespace NSQnet
 
             WriteAscii(String.Format("MPUB {0}\n", topic_name));
 
-            //TODO: WRITE OBJECTS
+            List<String> jsonData = data.Select(d => JsonSerializer.Current.SerializeObject(d)).ToList();
+            List<Byte[]> packed = jsonData.Select(js => PackMessage(js)).ToList();
+            var size = packed.Select(b => b.Length).Sum();
+            var numberOfMessages = data.Count;
 
+            byte[] combined = new Byte[4 + size];
+            byte[] sizeBytes = BitConverter.GetBytes(size);
+            Array.Reverse(sizeBytes);
+            Array.Copy(sizeBytes, combined, 4);
+            
+            int cursor = 4; 
+            foreach (var bytes in packed)
+            {
+                Array.Copy(bytes, 0, combined, cursor, bytes.Length);
+                cursor += bytes.Length;
+            }
+
+            WriteBinary(combined);
             return GetNextMessage();
         }
 

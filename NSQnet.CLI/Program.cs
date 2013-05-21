@@ -55,6 +55,7 @@ namespace NSQnet.CLI
         public static void sub_NSQMessageRecieved(object sender, NSQMessageEventArgs e)
         { 
             Console.WriteLine(e.Message.Body);
+            Thread.Sleep(1000);
         }
 
         public static object GetData()

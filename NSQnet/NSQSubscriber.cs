@@ -35,8 +35,8 @@ namespace NSQnet
             this.ReadyCount = MaxReadyCount;
         }
 
-        public Int64 MaxReadyCount { get; set; }
-        public Int64 ReadyCount { get; set; }
+        public Int32 MaxReadyCount { get; set; }
+        public Int32 ReadyCount { get; set; }
 
         public Int16 MaxAttemptCount { get; set; }
 
@@ -49,10 +49,12 @@ namespace NSQnet
 
         public void Subscribe(String topic_name, String channel_name)
         {
-            //var subscribed = 
             _protocol.Subscribe(topic_name, channel_name);
+        }
+
+        public void UpdateReadyCount()
+        {
             _protocol.Ready(ReadyCount);
-            //return subscribed;
         }
 
         private void NSQProtocolMessageRecieved(object sender, NSQMessageEventArgs e)
