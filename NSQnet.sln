@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet", "NSQnet\NSQnet.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet.Test", "NSQnet.Test\NSQnet.Test.csproj", "{C06768CD-D3C2-48F3-8220-174B8ADA11B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet.CLI", "NSQnet.CLI\NSQnet.CLI.csproj", "{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{C06768CD-D3C2-48F3-8220-174B8ADA11B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C06768CD-D3C2-48F3-8220-174B8ADA11B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C06768CD-D3C2-48F3-8220-174B8ADA11B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
