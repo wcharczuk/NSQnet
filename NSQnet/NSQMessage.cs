@@ -15,6 +15,6 @@ namespace NSQnet
 
         public Int16? Attempts { get; set; }
         public DateTime? TimeStamp { get; set; }
-        public String? MessageId { get; set; }
+        public String MessageId { get; set; }
     }
 }

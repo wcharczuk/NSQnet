@@ -46,9 +46,15 @@
     <Compile Include="FrameType.cs" />
     <Compile Include="JSONSerializer.cs" />
     <Compile Include="NSQClient.cs" />
+    <Compile Include="NSQPublisher.cs" />
+    <Compile Include="NSQMessage.cs" />
+    <Compile Include="NSQMessageEventArgs.cs" />
+    <Compile Include="NSQMessageRecievedHandler.cs" />
+    <Compile Include="NSQProtocol.cs" />
+    <Compile Include="NSQProtocolException.cs" />
+    <Compile Include="NSQSubscriber.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Response.cs" />
-    <Compile Include="Result.cs" />
+    <Compile Include="NSQResponseString.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

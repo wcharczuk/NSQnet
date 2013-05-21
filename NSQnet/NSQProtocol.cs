@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NSQnet
@@ -18,7 +19,7 @@ namespace NSQnet
         public NSQProtocol()
         {
             this.HeartbeatInterval = 30 * 1000; //the default, 30 seconds.
-            this.MaximumReadyCount = 100; 
+            this.MaximumReadyCount = 2500; 
         }
 
         public NSQProtocol(String hostname, Int32 port) : this()
@@ -39,7 +40,7 @@ namespace NSQnet
         public Int32 Port { get; set; }
 
         public Int32 HeartbeatInterval { get; set; }
-        public Int32 MaximumReadyCount { get; set; }
+        public Int64 MaximumReadyCount { get; set; }
 
         public Stream OutputStream { get; set; }
         private StreamWriter _outputWriter { get; set; }
@@ -53,6 +54,8 @@ namespace NSQnet
         private System.Net.Sockets.TcpClient _client = null;
         private System.Net.Sockets.NetworkStream _networkStream = null;
         private System.IO.BinaryReader _networkReader = null;
+
+        private Object _nl = new Object();
 
         public void Initialize()
         {
@@ -94,8 +97,8 @@ namespace NSQnet
         {
             while (_continue)
             {
-                var message = await ReadResultAsync();
-                Dispatch(message);
+                var message = await ReceiveMessageAsync();
+                RouteMessage(message);
             }
         }
 
@@ -112,25 +115,23 @@ namespace NSQnet
                 Array.Reverse(sizebuffer);
                 var size = BitConverter.ToInt32(sizebuffer, 0);
 
-                byte[] buffer = new Byte[size];
-                _networkStream.ReadAsync(buffer, 0, (int)size);
+                if (size != 0)
+                {
+                    byte[] buffer = new Byte[size];
+                    _networkStream.Read(buffer, 0, (int)size);
 
-                return UnpackMessage(size, buffer);
+                    return UnpackMessage(size, buffer);
+                }
+                return null;
             }
             return null;
         }
 
-        private String ReceiveMessageForValidation()
+        private void RouteMessage(NSQMessage result)
         {
-            var result = ReceiveMessage();
-            if (result != null && (result.FrameType == FrameType.Error || result.FrameType == FrameType.Message))
-                return result.Body;
-            else
-                return null;
-        }
+            if (result == null)
+                return;
 
-        public void Dispatch(NSQMessage result)
-        {
             if (result.Body.Equals(NSQResponseString.HEARTBEAT))
             {
                 NOP();
@@ -138,12 +139,36 @@ namespace NSQnet
             else if (result.FrameType == FrameType.Message)
             {
                 OnNSQMessageRecieved(new NSQMessageEventArgs() { Message = result });
-                Ready(this.MaximumReadyCount);
             }
-            else
+            
+            OnNSQAnyMessageRecieved(new NSQMessageEventArgs() { Message = result });
+        }
+
+        private NSQMessage GetNextMessage()
+        {
+            var result = new NSQMessage();
+            Boolean hasFired = false;
+            Action<object, NSQMessageEventArgs> action = (obj, e) =>
             {
-                LogOutput(result.Body);
+                result = e.Message;
+                hasFired = true;
+            };
+            var handler = new NSQMessageRecievedHandler(action);
+            NSQAnyMessageRecieved += handler;
+
+            while (!hasFired)
+            {
+                Thread.Sleep(10);
             }
+
+            NSQAnyMessageRecieved -= handler;
+
+            return result;
+        }
+
+        void NSQProtocol_NSQAnyMessageRecieved(object sender, NSQMessageEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         public event NSQMessageRecievedHandler NSQMessageRecieved;
@@ -153,22 +178,17 @@ namespace NSQnet
             if (NSQMessageRecieved != null)
                 NSQMessageRecieved(this, e);
         }
+
+        public event NSQMessageRecievedHandler NSQAnyMessageRecieved;
+
+        public void OnNSQAnyMessageRecieved(NSQMessageEventArgs e)
+        {
+            if (NSQAnyMessageRecieved != null)
+                NSQAnyMessageRecieved(this, e);
+        }
         #endregion
 
-        private void LogOutput(String output)
-        {
-            if (_outputWriter != null)
-            {
-                _outputWriter.Write(output);
-                _outputWriter.Flush();
-            }
-            else
-            {
-                Debug.Write(output);
-            }
-        }
-
-        public String Identify(String short_id, String long_id, Int32 heartbeat_interval, Boolean feature_negotiation)
+        public NSQMessage Identify(String short_id, String long_id, Int32 heartbeat_interval, Boolean feature_negotiation)
         {
             dynamic json = new AgileObject();
             json.short_id = short_id;
@@ -180,28 +200,36 @@ namespace NSQnet
             WriteAscii("IDENTIFY\n");
             WriteBinary(PackMessage(jsonText));
 
-            return ReadResultForValidation();
+            var result = GetNextMessage();
+            return result;
         }
 
-        public String Subscribe(String topic_name, String channel_name)
+        public void Subscribe(String topic_name, String channel_name)
         {
+            if (!CheckName(topic_name) || !CheckName(channel_name))
+                throw new ArgumentException("Bad Name");
+
             WriteAscii(String.Format("SUB {0} {1}\n", topic_name, channel_name));
-            return ReadResultForValidation();
+            //var result = GetNextMessage();
+            //return result;
         }
 
-        public String Publish(String topic_name, object data)
+        public NSQMessage Publish(String topic_name, object data)
         {
             if (!CheckName(topic_name))
                 throw new Exception("Bad topic_name");
 
-            WriteAscii(String.Format("PUB {0}\n"));
             var json = JsonSerializer.Current.SerializeObject(data);
-            WriteBinary(PackMessage(json));
+            var bytes = PackMessage(json);
+   
+            WriteAscii(String.Format("PUB {0}\n", topic_name));
+            WriteBinary(bytes);
 
-            return ReadResultForValidation();
+            var result = GetNextMessage();
+            return result;
         }
 
-        public String MultiPublish(String topic_name, List<Object> data)
+        public NSQMessage MultiPublish(String topic_name, List<Object> data)
         {
             if (!CheckName(topic_name))
                 throw new Exception("Bad topic_name");
@@ -210,7 +238,7 @@ namespace NSQnet
 
             //TODO: WRITE OBJECTS
 
-            return ReadResultForValidation();
+            return GetNextMessage();
         }
 
         public void Ready(Int64 count)
@@ -221,30 +249,30 @@ namespace NSQnet
             WriteAscii(String.Format("RDY {0}\n", count));
         }
 
-        public String Finish(String message_id)
+        public NSQMessage Finish(String message_id)
         {
             WriteAscii(String.Format("FIN {0}\n", message_id));
 
-            return ReadResultForValidation();
+            return GetNextMessage();
         }
 
-        public String Requeue(String message_id, Int32 timeout)
+        public NSQMessage Requeue(String message_id, Int32 timeout)
         {
             //TODO: check timeout.
             WriteAscii(String.Format("REQ {0} {1}\n", message_id, timeout));
-            return ReadResultForValidation();
+            return GetNextMessage();
         }
 
-        public String Touch(String message_id)
+        public NSQMessage Touch(String message_id)
         {
             WriteAscii(String.Format("TOUCH {0}\n", message_id));
-            return ReadResultForValidation();
+            return GetNextMessage();
         }
 
-        public String Close()
+        public NSQMessage Close()
         {
             WriteAscii("CLS\n");
-            return ReadResultForValidation();
+            return GetNextMessage();
         }
 
         public void NOP()
@@ -259,10 +287,21 @@ namespace NSQnet
 
         private void WriteAscii(String unicode)
         {
-            LogOutput(unicode);
-
             var asciiBytes = ConvertToAscii(unicode);
             _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
+        }
+
+        public void LogOutput(String output)
+        {
+            if (_outputWriter != null)
+            {
+                _outputWriter.Write(output);
+                _outputWriter.Flush();
+            }
+            else
+            {
+                Debug.Write(output);
+            }
         }
 
         private static Byte[] ConvertToAscii(String unicode)
@@ -351,7 +390,7 @@ namespace NSQnet
 
                 length = size - cursor;
                 byte[] bodyBuffer = new Byte[length];
-                Array.Copy(buffer, 4, bodyBuffer, 0, length);
+                Array.Copy(buffer, cursor, bodyBuffer, 0, length);
                 String body = ConvertFromAscii(bodyBuffer);
 
                 return new NSQMessage() { Size = size, FrameType = frameType, TimeStamp = new DateTime(timestamp), Attempts = attempts, MessageId = messageId, Body = body };

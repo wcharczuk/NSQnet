@@ -9,56 +9,22 @@ using System.Threading.Tasks;
 
 namespace NSQnet
 {
-    public class NSQPublisher
+    public class NSQPublisher : NSQClient
     {
-        public NSQPublisher() : base() 
+        public NSQPublisher() : base() { }
+
+        public NSQPublisher(String hostname, Int32 port) : base(hostname, port) { }
+
+        public NSQPublisher(String hostname, Int32 port, Stream output) : base(hostname, port, output) { }
+
+        public override void Initialize()
         {
-            _protocol = new NSQProtocol();
+            base.Initialize();
         }
 
-        public NSQPublisher(String hostname, Int32 port) : this()
+        public NSQMessage Publish(String topic_name, Object data)
         {
-            _protocol.Hostname = hostname;
-            _protocol.Port = port;
-        }
-
-        public NSQPublisher(String hostname, Int32 port, Stream output) : this()
-        {
-            _protocol.Hostname = hostname;
-            _protocol.Port = port;
-            _protocol.OutputStream = output;
-        }
-
-        private NSQProtocol _protocol = null;
-
-        public void Initialize()
-        {
-            _protocol.Initialize();
-        }
-
-        public Boolean Publish(String topic_name, Object data)
-        {
-            try
-            {
-                return _protocol.Publish(topic_name, data).Equals(NSQResponseString.OK);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public Boolean Publish(String topic_name, List<Object> data)
-        {
-            try
-            {
-                return _protocol.MultiPublish(topic_name, data).Equals(NSQResponseString.OK);
-            }
-            catch
-            {
-                return false;
-            }
+            return _protocol.Publish(topic_name, data);
         }
     }
 }
-

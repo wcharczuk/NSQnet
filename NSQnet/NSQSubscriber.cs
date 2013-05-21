@@ -9,20 +9,31 @@ namespace NSQnet
 {
     public class NSQSubscriber : NSQClient
     {
-        public NSQSubscriber() : base() {}
+        public NSQSubscriber() : base() 
+        {
+            this.MaxReadyCount = 2500;
+        }
 
-        public NSQSubscriber(String hostname, Int32 port) : base(hostname, port) {}
+        public NSQSubscriber(String hostname, Int32 port) : base(hostname, port) 
+        {
+            this.MaxReadyCount = 2500; 
+        }
 
         public NSQSubscriber(String hostname, Int32 port, Stream output)
-            : base(hostname, port, output) {}
+            : base(hostname, port, output) 
+        {
+            this.MaxReadyCount = 2500; 
+        }
 
         public override void Initialize()
         {
-            _protocol.NSQMessageRecieved += new NSQMessageRecievedHandler(NSQProtocolMessageRecieved);
             base.Initialize();
-        }
 
-        private NSQProtocol _protocol = null;
+            _protocol.NSQMessageRecieved += new NSQMessageRecievedHandler(NSQProtocolMessageRecieved);
+            _protocol.NSQAnyMessageRecieved += new NSQMessageRecievedHandler(NSQProtocolAnyMessageRecieved);
+
+            this.ReadyCount = MaxReadyCount;
+        }
 
         public Int64 MaxReadyCount { get; set; }
         public Int64 ReadyCount { get; set; }
@@ -36,18 +47,12 @@ namespace NSQnet
 
         public Int32 BackoffCounter { get; private set; }
 
-        public Boolean Subscribe(String topic_name, String channel_name)
+        public void Subscribe(String topic_name, String channel_name)
         {
-            try
-            {
-                var subscribed = _protocol.Subscribe(topic_name, channel_name).Equals(NSQResponseString.OK);
-                _protocol.Ready(ReadyCount);
-                return subscribed;
-            }
-            catch
-            {
-                return false;
-            }
+            //var subscribed = 
+            _protocol.Subscribe(topic_name, channel_name);
+            _protocol.Ready(ReadyCount);
+            //return subscribed;
         }
 
         private void NSQProtocolMessageRecieved(object sender, NSQMessageEventArgs e)
@@ -55,17 +60,25 @@ namespace NSQnet
             this.OnNSQMessageRecieved(e);
         }
 
-        public event NSQMessageRecievedHandler NSQMessageRecieved;
-
-        public Task<NSQMessage> ReceiveMessageAsync()
+        private void NSQProtocolAnyMessageRecieved(object sender, NSQMessageEventArgs e)
         {
-            return _protocol.ReceiveMessageAsync();
+            this.OnNSQAnyMessageRecieved(e);
         }
+
+        public event NSQMessageRecievedHandler NSQMessageRecieved;
 
         private void OnNSQMessageRecieved(NSQMessageEventArgs e)
         {
             if (NSQMessageRecieved != null)
                 NSQMessageRecieved(this, e);
+        }
+
+        public event NSQMessageRecievedHandler NSQAnyMessageRecieved;
+
+        private void OnNSQAnyMessageRecieved(NSQMessageEventArgs e)
+        {
+            if (NSQAnyMessageRecieved != null)
+                NSQAnyMessageRecieved(this, e);
         }
     }
 }

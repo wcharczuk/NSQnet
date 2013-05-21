@@ -12,6 +12,8 @@ namespace NSQnet
         public NSQClient()
         {
             _protocol = new NSQProtocol();
+            this.ShortIdentifier = System.Guid.NewGuid().ToString("N");
+            this.LongIdentifier = System.Net.Dns.GetHostName();
         }
 
         public NSQClient(String hostname, Int32 port) : this()
@@ -36,14 +38,22 @@ namespace NSQnet
         public String ShortIdentifier { get; set; }
         public String LongIdentifier { get; set; }
 
-        public Int32 HeartbeatMilliseconds { get; private set; }
+        public Int32 HeartbeatMilliseconds { get; set; }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
             _protocol.Initialize();
             _protocol.Identify(this.ShortIdentifier, this.LongIdentifier, this.HeartbeatMilliseconds, false); 
-            //todo: in future, feature negotiation. test if response is json or not.
+        }
 
+        public virtual void Stop()
+        {
+            try
+            {
+                _protocol.DestroyConnection();
+            }
+            catch { }
+            _protocol = null;
         }
     }
 }
