@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet", "NSQnet\NSQnet.csproj", "{210B2D86-71D7-45BA-B518-77151A020665}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet.Test", "NSQnet.Test\NSQnet.Test.csproj", "{C06768CD-D3C2-48F3-8220-174B8ADA11B7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{210B2D86-71D7-45BA-B518-77151A020665}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{210B2D86-71D7-45BA-B518-77151A020665}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{210B2D86-71D7-45BA-B518-77151A020665}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{210B2D86-71D7-45BA-B518-77151A020665}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C06768CD-D3C2-48F3-8220-174B8ADA11B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C06768CD-D3C2-48F3-8220-174B8ADA11B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C06768CD-D3C2-48F3-8220-174B8ADA11B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C06768CD-D3C2-48F3-8220-174B8ADA11B7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
