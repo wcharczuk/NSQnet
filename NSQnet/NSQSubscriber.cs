@@ -98,15 +98,12 @@ namespace NSQnet
 
         private void OnNSQMessageRecieved(NSQMessageEventArgs e)
         {
-            if (this.Ready > 0)
-                this.Ready = this.Ready - 1;
-            else
-                return;
-
             this.InFlight++;
 
             if (NSQMessageRecieved != null)
                 NSQMessageRecieved(this, e);
+
+            this.InFlight--;
         }
         #endregion
     }

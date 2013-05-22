@@ -24,5 +24,10 @@ namespace NSQnet
         {
             _protocol.Publish(topic_name, data);
         }
+
+        public void Publish(String topic_name, List<Object> data)
+        {
+            _protocol.MultiPublish(topic_name, data);
+        }
     }
 }

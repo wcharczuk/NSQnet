@@ -27,7 +27,7 @@ namespace NSQnet.CLI
 
             Console.WriteLine("Subscriber Connected.");
 
-            sub.MaxReadyCount = 5;
+            sub.MaxReadyCount = 1;
             sub.NSQMessageRecieved += new NSQMessageRecievedHandler(sub_NSQMessageRecieved);
             sub.Subscribe("activities", "activities");
             sub.UpdateReadyCount();
@@ -44,8 +44,8 @@ namespace NSQnet.CLI
         public static void sub_NSQMessageRecieved(object sender, NSQMessageEventArgs e)
         {
             var sub = sender as NSQSubscriber;
+            Console.WriteLine("Processed Message"); 
             sub.Finish(e.Message.MessageId);
-            Console.WriteLine("Processed Message");
             sub.UpdateReadyCount();
         }
 
@@ -55,11 +55,18 @@ namespace NSQnet.CLI
             pub.Initialize();
 
             Console.WriteLine("Publisher Connected.");
-            for (int x = 0; x < 1000; x++)
-            {
-                pub.Publish("activities", GetData());
-                Console.WriteLine("Published Message");
-            }
+            var data = new List<Object>()
+            {   
+                GetData(),
+                GetData(),
+                GetData(),
+                GetData(),
+                GetData(),
+                GetData(),
+                GetData()
+            };
+
+            pub.Publish("activities", data);
         }
 
         public static object GetData()

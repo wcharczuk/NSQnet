@@ -210,12 +210,17 @@ namespace NSQnet
             var size = packed.Select(b => b.Length).Sum();
             var numberOfMessages = data.Count;
 
-            byte[] combined = new Byte[4 + size];
+            byte[] combined = new Byte[8 + size];
             byte[] sizeBytes = BitConverter.GetBytes(size);
+
             Array.Reverse(sizeBytes);
             Array.Copy(sizeBytes, combined, 4);
-            
-            int cursor = 4; 
+
+            byte[] numberOfMessagesBytes = BitConverter.GetBytes(numberOfMessages);
+            Array.Reverse(numberOfMessagesBytes);
+            Array.Copy(numberOfMessagesBytes, 0, combined, 4, 4);
+
+            int cursor = 8; 
             foreach (var bytes in packed)
             {
                 Array.Copy(bytes, 0, combined, cursor, bytes.Length);
@@ -240,7 +245,6 @@ namespace NSQnet
 
         public void Requeue(String message_id, Int32 timeout)
         {
-            //TODO: check timeout.
             WriteAscii(String.Format("REQ {0} {1}\n", message_id, timeout));
         }
 
