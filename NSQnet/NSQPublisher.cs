@@ -15,16 +15,14 @@ namespace NSQnet
 
         public NSQPublisher(String hostname, Int32 port) : base(hostname, port) { }
 
-        public NSQPublisher(String hostname, Int32 port, Stream output) : base(hostname, port, output) { }
-
         public override void Initialize()
         {
             base.Initialize();
         }
 
-        public NSQMessage Publish(String topic_name, Object data)
+        public void Publish(String topic_name, Object data)
         {
-            return _protocol.Publish(topic_name, data);
+            _protocol.Publish(topic_name, data);
         }
     }
 }

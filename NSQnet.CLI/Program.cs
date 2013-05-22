@@ -11,22 +11,42 @@ namespace NSQnet.CLI
     {
         static void Main(string[] args)
         {
-            try
-            {
-                var sub = new NSQSubscriber("192.168.1.17", 4150);
-                sub.Initialize();
-                sub.NSQAnyMessageRecieved += new NSQMessageRecievedHandler(sub_NSQMessageRecieved);
-                sub.Subscribe("activities", "activities");
+            Thread pub = new Thread(new ThreadStart(DoPublisher));
+            pub.Start();
+            Thread sub = new Thread(new ThreadStart(DoSubscriber));
+            sub.Start();
 
-                while (true)
-                {
-                    Thread.Sleep(100);
-                }
-            }
-            catch (Exception e)
+            pub.Join();
+            sub.Join();
+        }
+
+        public static void DoSubscriber()
+        {
+            var sub = new NSQSubscriber("192.168.1.17", 4150);
+            sub.Initialize();
+
+            Console.WriteLine("Subscriber Connected.");
+
+            sub.MaxReadyCount = 5;
+            sub.NSQMessageRecieved += new NSQMessageRecievedHandler(sub_NSQMessageRecieved);
+            sub.Subscribe("activities", "activities");
+            sub.UpdateReadyCount();
+
+            Console.WriteLine("Subscribed To \"activities\"");
+
+            while (sub.IsConnected)
             {
-                Console.WriteLine(e.ToString());
+                Thread.Sleep(100);
             }
+            Console.WriteLine("Subscriber Disconnected.");
+        }
+
+        public static void sub_NSQMessageRecieved(object sender, NSQMessageEventArgs e)
+        {
+            var sub = sender as NSQSubscriber;
+            sub.Finish(e.Message.MessageId);
+            Console.WriteLine("Processed Message");
+            sub.UpdateReadyCount();
         }
 
         public static void DoPublisher()
@@ -34,35 +54,20 @@ namespace NSQnet.CLI
             var pub = new NSQPublisher("192.168.1.17", 4150);
             pub.Initialize();
 
-            Task pubTask = new Task(() =>
+            Console.WriteLine("Publisher Connected.");
+            for (int x = 0; x < 1000; x++)
             {
-                try
-                {
-                    for (int x = 0; x < 1000; x++)
-                    {
-                        var result = pub.Publish("activities", GetData());
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
-            });
-
-            pubTask.Start();
-        }
-
-        public static void sub_NSQMessageRecieved(object sender, NSQMessageEventArgs e)
-        { 
-            Console.WriteLine(e.Message.Body);
-            Thread.Sleep(1000);
+                pub.Publish("activities", GetData());
+                Console.WriteLine("Published Message");
+            }
         }
 
         public static object GetData()
         {
             dynamic obj = new AgileObject();
+            obj.Id = System.Guid.NewGuid().ToString("N");
             obj.ActivityTypeId = 201;
-            obj.ActivityDateTime = "2013-05-21 14:04:52.097";
+            obj.ActivityDateTime = DateTime.Now;
             obj.IpAddress = "68.199.76.175";
             obj.ServerName = "Web1";
             obj.CustomerId = 18;

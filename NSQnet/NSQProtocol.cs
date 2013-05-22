@@ -29,21 +29,19 @@ namespace NSQnet
             this.Initialize();
         }
 
-        public NSQProtocol(String hostname, Int32 port, Stream output) : this()
-        {
-            this.Hostname = hostname;
-            this.Port = port;
-            this.OutputStream = output;
-        }
-
         public String Hostname { get; set; }
         public Int32 Port { get; set; }
 
         public Int32 HeartbeatInterval { get; set; }
         public Int64 MaximumReadyCount { get; set; }
 
-        public Stream OutputStream { get; set; }
-        private StreamWriter _outputWriter { get; set; }
+        public Boolean IsConnected
+        {
+            get
+            {
+                return _networkStream != null && _client.Connected;
+            }
+        }
 
         private static readonly Byte[] Version = new Byte[4] { 0x20, 0x20, 0x56, 0x32 };
         private static readonly Int16 MAX_NAME_LENGTH = 32;
@@ -54,8 +52,6 @@ namespace NSQnet
         private System.Net.Sockets.TcpClient _client = null;
         private System.Net.Sockets.NetworkStream _networkStream = null;
         private System.IO.BinaryReader _networkReader = null;
-
-        private Object _nl = new Object();
 
         public void Initialize()
         {
@@ -71,10 +67,7 @@ namespace NSQnet
             _networkReader = new System.IO.BinaryReader(_networkStream);
             _networkStream.Write(Version, 0, Version.Length);
 
-            if (OutputStream != null)
-                _outputWriter = new StreamWriter(OutputStream);
-
-            RecieveLoop();
+            ReceiveLoop();
         }
 
         public void DestroyConnection()
@@ -93,7 +86,7 @@ namespace NSQnet
         }
 
         #region Message Wait Loop
-        private async void RecieveLoop()
+        private async void ReceiveLoop()
         {
             while (_continue)
             {
@@ -102,7 +95,7 @@ namespace NSQnet
             }
         }
 
-        public Task<NSQMessage> ReceiveMessageAsync()
+        private Task<NSQMessage> ReceiveMessageAsync()
         {
             return Task.Run<NSQMessage>(() => ReceiveMessage());
         }
@@ -138,38 +131,12 @@ namespace NSQnet
             }
             else if (result.FrameType == FrameType.Message)
             {
-                OnNSQMessageRecieved(new NSQMessageEventArgs() { Message = result });
+                SignalMessageRecievedEvent(new NSQMessageEventArgs() { Message = result });
             }
-            
-            OnNSQAnyMessageRecieved(new NSQMessageEventArgs() { Message = result });
         }
+        #endregion
 
-        private NSQMessage GetNextMessage()
-        {
-            var result = new NSQMessage();
-            Boolean hasFired = false;
-            Action<object, NSQMessageEventArgs> action = (obj, e) =>
-            {
-                result = e.Message;
-                hasFired = true;
-            };
-            var handler = new NSQMessageRecievedHandler(action);
-            NSQAnyMessageRecieved += handler;
-
-            while (!hasFired)
-            {
-                Thread.Sleep(10);
-            }
-
-            NSQAnyMessageRecieved -= handler;
-
-            return result;
-        }
-
-        void NSQProtocol_NSQAnyMessageRecieved(object sender, NSQMessageEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
+        #region Events
 
         public event NSQMessageRecievedHandler NSQMessageRecieved;
 
@@ -179,16 +146,26 @@ namespace NSQnet
                 NSQMessageRecieved(this, e);
         }
 
-        public event NSQMessageRecievedHandler NSQAnyMessageRecieved;
-
-        public void OnNSQAnyMessageRecieved(NSQMessageEventArgs e)
+        private async void SignalMessageRecievedEvent(NSQMessageEventArgs e)
         {
-            if (NSQAnyMessageRecieved != null)
-                NSQAnyMessageRecieved(this, e);
+            await SignalMessageRecievedEventAsync(e);
         }
+
+        private Task SignalMessageRecievedEventAsync(NSQMessageEventArgs e)
+        {
+            NSQProtocol _protocol = this;
+            return Task.Run(() =>
+            {
+                if (NSQMessageRecieved != null)
+                    NSQMessageRecieved(_protocol, e);
+            });
+        }
+
         #endregion
 
-        public NSQMessage Identify(String short_id, String long_id, Int32 heartbeat_interval, Boolean feature_negotiation)
+        #region Protocol Actions
+
+        public void Identify(String short_id, String long_id, Int32 heartbeat_interval, Boolean feature_negotiation)
         {
             dynamic json = new AgileObject();
             json.short_id = short_id;
@@ -199,21 +176,17 @@ namespace NSQnet
             var jsonText = JsonSerializer.Current.SerializeObject(json);
             WriteAscii("IDENTIFY\n");
             WriteBinary(PackMessage(jsonText));
-
-            var result = GetNextMessage();
-            return result;
         }
 
-        public NSQMessage Subscribe(String topic_name, String channel_name)
+        public void Subscribe(String topic_name, String channel_name)
         {
             if (!CheckName(topic_name) || !CheckName(channel_name))
                 throw new ArgumentException("Bad Name");
 
             WriteAscii(String.Format("SUB {0} {1}\n", topic_name, channel_name));
-            return GetNextMessage();
         }
 
-        public NSQMessage Publish(String topic_name, object data)
+        public void Publish(String topic_name, object data)
         {
             if (!CheckName(topic_name))
                 throw new Exception("Bad topic_name");
@@ -223,11 +196,9 @@ namespace NSQnet
    
             WriteAscii(String.Format("PUB {0}\n", topic_name));
             WriteBinary(bytes);
-
-            return GetNextMessage();
         }
 
-        public NSQMessage MultiPublish(String topic_name, List<Object> data)
+        public void MultiPublish(String topic_name, List<Object> data)
         {
             if (!CheckName(topic_name))
                 throw new Exception("Bad topic_name");
@@ -252,7 +223,6 @@ namespace NSQnet
             }
 
             WriteBinary(combined);
-            return GetNextMessage();
         }
 
         public void Ready(Int64 count)
@@ -263,36 +233,35 @@ namespace NSQnet
             WriteAscii(String.Format("RDY {0}\n", count));
         }
 
-        public NSQMessage Finish(String message_id)
+        public void Finish(String message_id)
         {
             WriteAscii(String.Format("FIN {0}\n", message_id));
-
-            return GetNextMessage();
         }
 
-        public NSQMessage Requeue(String message_id, Int32 timeout)
+        public void Requeue(String message_id, Int32 timeout)
         {
             //TODO: check timeout.
             WriteAscii(String.Format("REQ {0} {1}\n", message_id, timeout));
-            return GetNextMessage();
         }
 
-        public NSQMessage Touch(String message_id)
+        public void Touch(String message_id)
         {
             WriteAscii(String.Format("TOUCH {0}\n", message_id));
-            return GetNextMessage();
         }
 
-        public NSQMessage Close()
+        public void Close()
         {
             WriteAscii("CLS\n");
-            return GetNextMessage();
         }
 
         public void NOP()
         {
             WriteAscii("NOP\n");
         }
+
+        #endregion
+
+        #region Utility Methods
 
         private void WriteBinary(Byte[] binary)
         {
@@ -303,19 +272,6 @@ namespace NSQnet
         {
             var asciiBytes = ConvertToAscii(unicode);
             _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
-        }
-
-        public void LogOutput(String output)
-        {
-            if (_outputWriter != null)
-            {
-                _outputWriter.Write(output);
-                _outputWriter.Flush();
-            }
-            else
-            {
-                Debug.Write(output);
-            }
         }
 
         private static Byte[] ConvertToAscii(String unicode)
@@ -410,5 +366,7 @@ namespace NSQnet
                 return new NSQMessage() { Size = size, FrameType = frameType, TimeStamp = new DateTime(timestamp), Attempts = attempts, MessageId = messageId, Body = body };
             }
         }
+
+        #endregion
     }
 }

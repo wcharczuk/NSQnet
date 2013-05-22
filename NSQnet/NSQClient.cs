@@ -22,14 +22,6 @@ namespace NSQnet
             _protocol.Port = port;
         }
 
-        public NSQClient(String hostname, Int32 port, Stream output)
-            : this()
-        {
-            _protocol.Hostname = hostname;
-            _protocol.Port = port;
-            _protocol.OutputStream = output;
-        }
-
         protected NSQProtocol _protocol = null;
 
         public TimeSpan ReadTimeout { get; set; }
@@ -39,6 +31,14 @@ namespace NSQnet
         public String LongIdentifier { get; set; }
 
         public Int32 HeartbeatMilliseconds { get; set; }
+
+        public Boolean IsConnected
+        {
+            get
+            {
+                return _protocol.IsConnected;
+            }
+        }
 
         public virtual void Initialize()
         {
