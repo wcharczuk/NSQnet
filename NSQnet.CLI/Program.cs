@@ -27,8 +27,15 @@ namespace NSQnet.CLI
 
             Console.WriteLine("Subscriber Connected.");
 
+            Action<Object, NSQMessageEventArgs> messageHandler = (sender, e) =>
+            {
+                Console.WriteLine("Processed Message");
+                sub.Finish(e.Message.MessageId);
+                sub.UpdateReadyCount();
+            };
+
             sub.MaxReadyCount = 1;
-            sub.NSQMessageRecieved += new NSQMessageRecievedHandler(sub_NSQMessageRecieved);
+            sub.NSQMessageRecieved += new NSQMessageRecievedHandler(messageHandler);
             sub.Subscribe("activities", "activities");
             sub.UpdateReadyCount();
 
@@ -39,14 +46,6 @@ namespace NSQnet.CLI
                 Thread.Sleep(100);
             }
             Console.WriteLine("Subscriber Disconnected.");
-        }
-
-        public static void sub_NSQMessageRecieved(object sender, NSQMessageEventArgs e)
-        {
-            var sub = sender as NSQSubscriber;
-            Console.WriteLine("Processed Message"); 
-            sub.Finish(e.Message.MessageId);
-            sub.UpdateReadyCount();
         }
 
         public static void DoPublisher()
