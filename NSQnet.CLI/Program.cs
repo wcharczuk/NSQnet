@@ -11,13 +11,36 @@ namespace NSQnet.CLI
     {
         static void Main(string[] args)
         {
-            Thread pub = new Thread(new ThreadStart(DoPublisher));
-            pub.Start();
-            Thread sub = new Thread(new ThreadStart(DoSubscriber));
-            sub.Start();
+            //Thread pub = new Thread(new ThreadStart(DoPublisher));
+            //pub.Start();
+            //Thread sub = new Thread(new ThreadStart(DoSubscriber));
+            //sub.Start();
 
-            pub.Join();
-            sub.Join();
+            //pub.Join();
+            //sub.Join();
+
+            NSQLookup lookupClient = new NSQLookup("192.168.1.17", 4161);
+            Console.WriteLine("Server is " + (lookupClient.Ping() ? "OK" : "NOT OK"));
+
+            Console.WriteLine("Topics:");
+            foreach (var topic in lookupClient.Topics())
+            {
+                Console.WriteLine(topic);
+            }
+
+            Console.WriteLine("Producers: ");
+            foreach (var producer in lookupClient.Nodes())
+            {
+                Console.WriteLine(producer.Hostname);
+            }
+
+            Console.WriteLine("Producers For Test: ");
+            foreach (var producer in lookupClient.ProducersForTopic("test"))
+            {
+                Console.WriteLine(producer.Hostname);
+            }
+
+            Console.ReadKey();
         }
 
         public static void DoSubscriber()

@@ -46,6 +46,7 @@
     <Compile Include="FrameType.cs" />
     <Compile Include="JSONSerializer.cs" />
     <Compile Include="NSQClient.cs" />
+    <Compile Include="NSQLookup.cs" />
     <Compile Include="NSQPublisher.cs" />
     <Compile Include="NSQMessage.cs" />
     <Compile Include="NSQMessageEventArgs.cs" />
@@ -53,8 +54,11 @@
     <Compile Include="NSQProtocol.cs" />
     <Compile Include="NSQProtocolException.cs" />
     <Compile Include="NSQSubscriber.cs" />
+    <Compile Include="ObjectExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NSQResponseString.cs" />
+    <Compile Include="Reflection.cs" />
+    <Compile Include="StreamExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
