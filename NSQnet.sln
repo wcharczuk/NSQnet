@@ -7,6 +7,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet.Test", "NSQnet.Test\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet.CLI", "NSQnet.CLI\NSQnet.CLI.csproj", "{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{B28923DD-D710-4E7A-AFC5-79C9843EECE9}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.travis.yml = .travis.yml
+		LICENSE.md = LICENSE.md
+		NSQnet.nuspec = NSQnet.nuspec
+		NSQnet.xbuild = NSQnet.xbuild
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
