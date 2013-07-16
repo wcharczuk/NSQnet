@@ -22,8 +22,15 @@ Action<Object, NSQMessageEventArgs> messageHandler = (sender, e) =>
 {
     //do your message processing here, can be as complex or long winded
     //as you want because this action will not block the main thread.
-    Console.WriteLine("Processed Message");
-    sub.Finish(e.Message.MessageId);
+    try
+    {
+        Console.WriteLine("Processed Message");
+        sub.Finish(e.Message.MessageId);
+    }
+    catch
+    {
+        sub.Requeue(e.Message.MessageId, 0);
+    }
 };
 
 //this event hook will fire in a separate task/threadpool context
