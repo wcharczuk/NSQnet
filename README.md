@@ -2,8 +2,8 @@
 This project is a .net implementation of the [NSQ protocol](https://github.com/bitly/nsq/blob/master/docs/protocol.md).
 
 ##Installation##
-Nuget: ```install-package nsqnet```
-Binary: Download from the releases page, make sure to fill requirements.
+* Nuget: ```install-package nsqnet```
+* Binary: Download from the releases page, make sure to fill requirements.
 
 ###Requrements###
 * [.net 4.5](http://www.microsoft.com/visualstudio/eng/downloads#d-net-45) or [Mono 3.0+](http://www.mono-project.com/Release_Notes_Mono_3.0#New_in_Mono_3.0.10)
