@@ -36,6 +36,11 @@ Global
 		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = NSQnet.CLI\NSQnet.CLI.csproj
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection

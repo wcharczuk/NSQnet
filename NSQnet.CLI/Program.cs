@@ -77,14 +77,17 @@ namespace NSQnet.CLI
 
             foreach (var topic in topics)
             {
-                foreach(var producer in lookupClient.ProducersForTopic(topic))
-                {
-                    if (!_subscribers.ContainsKey(producer.Hostname.ToLower()))
-                    {
-                        var sub = GetSubscriber(producer.Hostname, (int)producer.TCP_Port, topic, "main");
-                        _subscribers.AddOrUpdate(sub.LongIdentifier.ToLower(), sub, (long_id, oldSub) => sub);
-                    }
-                }
+				foreach(var channel in lookupClient.ChannelsForTopic(topic))
+				{
+	                foreach(var producer in lookupClient.ProducersForTopic(topic))
+	                {
+	                    if (!_subscribers.ContainsKey(producer.Hostname.ToLower()))
+	                    {
+							var sub = GetSubscriber(producer.Hostname, (int)producer.TCP_Port, topic, channel);
+	                        _subscribers.AddOrUpdate(sub.LongIdentifier.ToLower(), sub, (long_id, oldSub) => sub);
+	                    }
+	                }
+				}
             }
         }
 

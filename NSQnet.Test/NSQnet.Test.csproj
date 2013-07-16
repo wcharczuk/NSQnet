@@ -11,6 +11,8 @@
     <AssemblyName>NSQnet.Test</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,7 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NSQnet\NSQnet.csproj">
-      <Project>{210b2d86-71d7-45ba-b518-77151a020665}</Project>
+      <Project>{210B2D86-71D7-45BA-B518-77151A020665}</Project>
       <Name>NSQnet</Name>
     </ProjectReference>
   </ItemGroup>
