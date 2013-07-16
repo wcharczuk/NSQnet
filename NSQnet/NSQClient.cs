@@ -13,14 +13,21 @@ namespace NSQnet
         {
             _protocol = new NSQProtocol();
             _protocol.NSQProtocolDisconnected += new NSQProtocolDisconnectedHandler(NSQProtocolDisconnected_Handler);
-            this.ShortIdentifier = System.Guid.NewGuid().ToString("N");
-            this.LongIdentifier = System.Net.Dns.GetHostName();
+            this.ShortIdentifier = System.Net.Dns.GetHostName();
+            this.LongIdentifier = System.Guid.NewGuid().ToString("N"); 
         }
 
         public NSQClient(String hostname, Int32 port) : this()
         {
             _protocol.Hostname = hostname;
             _protocol.Port = port;
+        }
+
+        public NSQClient(String shortIdentifier, String longIdentifier, String hostname, Int32 port)
+            : this(hostname, port)
+        {
+            this.ShortIdentifier = shortIdentifier;
+            this.LongIdentifier = longIdentifier;
         }
 
         protected NSQProtocol _protocol = null;

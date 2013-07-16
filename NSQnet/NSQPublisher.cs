@@ -15,6 +15,12 @@ namespace NSQnet
 
         public NSQPublisher(String hostname, Int32 port) : base(hostname, port) { }
 
+        public NSQPublisher(String shortIdentifier, String longIdentifier, String hostname, Int32 port) :
+            base(shortIdentifier, longIdentifier, hostname, port)
+        {
+
+        }
+
         public override void Initialize()
         {
             base.Initialize();

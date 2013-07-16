@@ -140,7 +140,7 @@ namespace NSQnet
 
         public async Task<IEnumerable<String>> ChannelsForTopicAsync(String topicName)
         {
-            var responseBody = await _getHttpResponseBody("/channels");
+            var responseBody = await _getHttpResponseBody("/channels", new dict() { { "topic" , topicName } });
             dynamic responseData = _getDataFromResponse(responseBody);
             IEnumerable<object> list = responseData.channels;
 

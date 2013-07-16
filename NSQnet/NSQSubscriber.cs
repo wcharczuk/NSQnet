@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,28 @@ namespace NSQnet
 {
     public class NSQSubscriber : NSQClient
     {
+        public class Subscription
+        {
+            public String Topic { get; set; }
+            public String Channel { get; set; }
+
+            public String HashId { get { return String.Format("{0}.{1}", Topic, Channel); } }
+
+            public override int GetHashCode()
+            {
+                return HashId.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                var that = obj as Subscription;
+                if(that == null)
+                    return false;
+
+                return this.HashId.Equals(that.HashId);
+            }
+        }
+
         public NSQSubscriber() : base() 
         {
             this.MaxReadyCount = 2500;
@@ -16,7 +39,13 @@ namespace NSQnet
 
         public NSQSubscriber(String hostname, Int32 port) : base(hostname, port) 
         {
-            this.MaxReadyCount = 2500; 
+            this.MaxReadyCount = 2500;
+        }
+
+        public NSQSubscriber(String shortIdentifier, String longIdentifier, String hostname, Int32 port) :
+            base(shortIdentifier, longIdentifier, hostname, port)
+        {
+            this.MaxReadyCount = 2500;
         }
 
         public override void Initialize()
@@ -28,13 +57,18 @@ namespace NSQnet
 
         public Int32 MaxReadyCount { get; set; }
 
+        public ConcurrentBag<Subscription> _subscriptions = new ConcurrentBag<Subscription>();
+
+        public Boolean IsSubscribed(String topic, String channel)
+        {
+            return _subscriptions.Contains(new Subscription() { Topic = topic, Channel = channel });
+        }
+
         private Int32 _readyCount = default(int);
         public Int32 ReadyCount { get { return _readyCount; } }
 
         private Int64 _processingCount = default(Int32);
         public Int64 ProccessingCount { get { return _processingCount; } }
-
-        public Int16 MaxAttemptCount { get; set; }
 
         /// <summary>
         /// SUB - subscribe to a specified topic/channel
@@ -45,6 +79,7 @@ namespace NSQnet
         public void Subscribe(String topic_name, String channel_name)
         {
             _protocol.Subscribe(topic_name, channel_name);
+            _subscriptions.Add(new Subscription() { Topic = topic_name, Channel = channel_name });
         }
 
         /// <summary>
@@ -78,6 +113,9 @@ namespace NSQnet
             _protocol.Touch(message_id);
         }
 
+        /// <summary>
+        /// Send the RDY Command to the NSQD with the current ready count.
+        /// </summary>
         public void UpdateReadyCount()
         {
             _protocol.Ready(_readyCount);

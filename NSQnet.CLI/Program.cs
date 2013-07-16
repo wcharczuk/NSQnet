@@ -77,23 +77,27 @@ namespace NSQnet.CLI
 
             foreach (var topic in topics)
             {
-				foreach(var channel in lookupClient.ChannelsForTopic(topic))
-				{
-	                foreach(var producer in lookupClient.ProducersForTopic(topic))
+	            foreach(var producer in lookupClient.ProducersForTopic(topic))
+	            {
+	                if (!_subscribers.ContainsKey(producer.Hostname.ToLower()))
 	                {
-	                    if (!_subscribers.ContainsKey(producer.Hostname.ToLower()))
-	                    {
-							var sub = GetSubscriber(producer.Hostname, (int)producer.TCP_Port, topic, channel);
-	                        _subscribers.AddOrUpdate(sub.LongIdentifier.ToLower(), sub, (long_id, oldSub) => sub);
-	                    }
+						var sub = GetSubscriber(producer.Hostname.ToLower(), producer.Hostname.ToLower(), producer.Hostname, (int)producer.TCP_Port, topic);
+	                    _subscribers.AddOrUpdate(sub.LongIdentifier, sub, (long_id, oldSub) => sub);
 	                }
-				}
+                    else if (!_subscribers[producer.Hostname.ToLower()].IsSubscribed(topic, topic))
+                    {
+                        _subscribers[producer.Hostname.ToLower()].Subscribe(topic, topic);
+                    }
+	            }
             }
         }
 
-        public static NSQSubscriber GetSubscriber(String host, Int32 port, String topicName, String channelName)
+        public static NSQSubscriber GetSubscriber(String shortId, String longId, String host, Int32 port, String topicName, String channelName = null)
         {
-            var sub = new NSQSubscriber(host, port);
+            var sub = new NSQSubscriber(shortId, longId, host, port);
+
+            channelName = channelName ?? topicName;
+
             sub.Initialize();
 
             //closures are AWESOME and you should use them.
