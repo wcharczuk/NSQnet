@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata schemaVersion="2">
     <id>NSQnet</id>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
     <authors>Will Charczuk</authors>
     <owners>Will Charcuzk</owners>
     <iconUrl>https://raw.github.com/bitly/nsq/master/docs/images/nsq.png</iconUrl>
@@ -10,8 +10,10 @@
     <licenseUrl>https://raw.github.com/ClothesHorse/nsqnet/master/LICENSE.md</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <summary>NSQ Client for .net</summary>
-    <description>A high performance mini-orm enabling expressive queries and data models. Supports MSSQL.</description>
+    <description>NSQ Client for .net</description>
     <releaseNotes>
+      * 0.5.1       - Bug Fixes.
+                    - Changed Description
       * 0.5.0       - Initial Release.
                     - API Subject to change, may contain defects.
     </releaseNotes>
