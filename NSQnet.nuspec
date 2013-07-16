@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata schemaVersion="2">
-    <id>Destrier</id>
+    <id>NSQnet</id>
     <version>0.5.0</version>
     <authors>Will Charczuk</authors>
     <owners>Will Charcuzk</owners>
-    <iconUrl></iconUrl>
+    <iconUrl>https://raw.github.com/bitly/nsq/master/docs/images/nsq.png</iconUrl>
     <projectUrl>https://github.com/clotheshorse/nsqnet</projectUrl>
     <licenseUrl>https://raw.github.com/ClothesHorse/nsqnet/master/LICENSE.md</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
