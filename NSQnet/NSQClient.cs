@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 
 namespace NSQnet
 {
-    public abstract class NSQClient
+    public abstract class NSQClient : IDisposable
     {
         public NSQClient()
         {
             _protocol = new NSQProtocol();
+            _protocol.NSQProtocolDisconnected += new NSQProtocolDisconnectedHandler(NSQProtocolDisconnected_Handler);
             this.ShortIdentifier = System.Guid.NewGuid().ToString("N");
             this.LongIdentifier = System.Net.Dns.GetHostName();
         }
@@ -31,6 +32,18 @@ namespace NSQnet
         public String LongIdentifier { get; set; }
 
         public Int32 HeartbeatMilliseconds { get; set; }
+
+        public void NSQProtocolDisconnected_Handler(object sender, EventArgs e)
+        {
+            OnNSQClientDisconnected(e);
+        }
+
+        public event NSQProtocolDisconnectedHandler NSQClientDisconnected;
+        public void OnNSQClientDisconnected(EventArgs e)
+        {
+            if (NSQClientDisconnected != null)
+                NSQClientDisconnected(this, e);
+        }
 
         public Boolean IsConnected
         {
@@ -54,6 +67,15 @@ namespace NSQnet
             }
             catch { }
             _protocol = null;
+        }
+
+        public void Dispose()
+        {
+            if (_protocol != null)
+            {
+                _protocol.Dispose();
+                _protocol = null;
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace NSQnet
 {
-    public class NSQProtocol
+    public class NSQProtocol : IDisposable
     {
         public static Boolean CheckName(String name)
         {
@@ -90,10 +90,21 @@ namespace NSQnet
         #region Message Wait Loop
         private async void ReceiveLoop()
         {
-            while (_continue)
+            try
             {
-                var message = await ReceiveMessageAsync();
-                RouteMessage(message);
+                while (_continue)
+                {
+                    var message = await ReceiveMessageAsync();
+
+                    if (message == null)
+                        break;
+
+                    RouteMessage(message);
+                }
+            }
+            finally
+            {
+                OnNSQProtocolDisconnected(null);
             }
         }
 
@@ -161,6 +172,14 @@ namespace NSQnet
                 if (NSQMessageRecieved != null)
                     NSQMessageRecieved(_protocol, e);
             });
+        }
+
+        public event NSQProtocolDisconnectedHandler NSQProtocolDisconnected;
+
+        public void OnNSQProtocolDisconnected(EventArgs e)
+        {
+            if (NSQProtocolDisconnected != null)
+                NSQProtocolDisconnected(this, e);
         }
 
         #endregion
@@ -397,5 +416,10 @@ namespace NSQnet
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            DestroyConnection();
+        }
     }
 }
