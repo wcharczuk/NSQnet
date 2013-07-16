@@ -62,7 +62,8 @@ namespace NSQnet.CLI
             {
                 foreach(var producer in lookupClient.ProducersForTopic(topic))
                 {
-                    GetSubscriber(producer.Hostname, (int)producer.TCP_Port, topic);
+                    //producer.Hostname
+                    GetSubscriber("192.168.1.24", (int)producer.TCP_Port, topic, "main");
                 }
             }
 
@@ -72,14 +73,14 @@ namespace NSQnet.CLI
             }
         }
 
-        public static void GetSubscriber(String host, Int32 port, String topicName, String channelName = null)
+        public static void GetSubscriber(String host, Int32 port, String topicName, String channelName)
         {
             var sub = new NSQSubscriber(host, port);
             sub.Initialize();
 
             Action<Object, NSQMessageEventArgs> messageHandler = (sender, e) =>
             {
-                Console.Write("{0}::{1}.{2} MSG ");
+                Console.Write(String.Format("{0}::{2}.{1} MSG ", host, channelName, topicName));
                 Console.WriteLine(e.Message.Body);
                 sub.Finish(e.Message.MessageId);
                 sub.ResetReadyCount();
@@ -90,13 +91,13 @@ namespace NSQnet.CLI
             sub.Subscribe(topicName, channelName);
             sub.ResetReadyCount();
 
-            Console.WriteLine(String.Format("{0]::{1}.{2} Subscribed", host, channelName, topicName));
+            Console.WriteLine(String.Format("{0}::{2}.{1} Subscribed", host, channelName, topicName));
 
             while (sub.IsConnected)
             {
                 Thread.Sleep(100);
             }
-            Console.WriteLine(String.Format("{0]::{1}.{2} Disconnected", host, channelName, topicName));
+            Console.WriteLine(String.Format("{0}::{2}.{1} Disconnected", host, channelName, topicName));
         }
     }
 }

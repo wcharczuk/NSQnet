@@ -13,7 +13,7 @@ namespace NSQnet
     {
         public static Boolean CheckName(String name)
         {
-            return name.Length > 1 && name.Length < MAX_NAME_LENGTH && System.Text.RegularExpressions.Regex.IsMatch(name, VALID_NAME_EXPR);
+            return name != null && name.Length > 1 && name.Length < MAX_NAME_LENGTH && System.Text.RegularExpressions.Regex.IsMatch(name, VALID_NAME_EXPR);
         }
 
         public NSQProtocol()
