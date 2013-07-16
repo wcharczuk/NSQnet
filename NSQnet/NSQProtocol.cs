@@ -53,6 +53,8 @@ namespace NSQnet
         private System.Net.Sockets.NetworkStream _networkStream = null;
         private System.IO.BinaryReader _networkReader = null;
 
+        protected ReaderWriterLockSlim _networkStreamLock = new ReaderWriterLockSlim();
+
         public void Initialize()
         {
             if (String.IsNullOrWhiteSpace(this.Hostname))
@@ -180,10 +182,17 @@ namespace NSQnet
 
         public void Subscribe(String topic_name, String channel_name)
         {
-            if (!CheckName(topic_name) || !CheckName(channel_name))
+            if (!CheckName(topic_name))
                 throw new ArgumentException("Bad Name");
 
-            WriteAscii(String.Format("SUB {0} {1}\n", topic_name, channel_name));
+            if (CheckName(channel_name))
+            {
+                WriteAscii(String.Format("SUB {0} {1}\n", topic_name, channel_name));
+            }
+            else
+            {
+                WriteAscii(String.Format("SUB {0}\n", topic_name));
+            }
         }
 
         public void Publish(String topic_name, object data)
@@ -269,13 +278,29 @@ namespace NSQnet
 
         private void WriteBinary(Byte[] binary)
         {
-            _networkStream.Write(binary, 0, binary.Length);
+            _networkStreamLock.EnterWriteLock();
+            try
+            {
+                _networkStream.Write(binary, 0, binary.Length);
+            }
+            finally
+            {
+                _networkStreamLock.ExitWriteLock();
+            }
         }
 
         private void WriteAscii(String unicode)
         {
             var asciiBytes = ConvertToAscii(unicode);
-            _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
+            _networkStreamLock.EnterWriteLock();
+            try
+            {
+                _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
+            }
+            finally
+            {
+                _networkStreamLock.ExitWriteLock();
+            }
         }
 
         private static Byte[] ConvertToAscii(String unicode)

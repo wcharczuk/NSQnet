@@ -22,17 +22,17 @@ namespace NSQnet
         public override void Initialize()
         {
             base.Initialize();
-
+            _readyCount = MaxReadyCount;
             _protocol.NSQMessageRecieved += new NSQMessageRecievedHandler(NSQProtocolMessageRecieved);
-
-            this.Ready = MaxReadyCount;
         }
 
         public Int32 MaxReadyCount { get; set; }
 
-        public Int32 Ready { get; set; }
+        private Int32 _readyCount = default(int);
+        public Int32 ReadyCount { get { return _readyCount; } }
 
-        public Int32 InFlight { get; set; }
+        private Int64 _processingCount = default(Int32);
+        public Int64 ProccessingCount { get { return _processingCount; } }
 
         public Int16 MaxAttemptCount { get; set; }
 
@@ -78,13 +78,18 @@ namespace NSQnet
             _protocol.Touch(message_id);
         }
 
-        /// <summary>
-        /// RDY - update RDY state (indicate you are ready to receive messages)
-        /// </summary>
         public void UpdateReadyCount()
         {
-            Ready = MaxReadyCount;
-            _protocol.Ready(Ready);
+            _protocol.Ready(_readyCount);
+        }
+
+        /// <summary>
+        /// RDY - update RDY state (indicate you are ready to receive messages) to MaxReadyCount;
+        /// </summary>
+        public void ResetReadyCount()
+        {
+            _readyCount = MaxReadyCount;
+            _protocol.Ready(_readyCount);
         }
 
         #region Events
@@ -94,16 +99,32 @@ namespace NSQnet
             this.OnNSQMessageRecieved(e);
         }
 
+        /// <summary>
+        /// Fire this delegate when a message is recieved. 
+        /// </summary>
+        /// <remarks>
+        /// Will be off the main thread!
+        /// </remarks>
         public event NSQMessageRecievedHandler NSQMessageRecieved;
 
         private void OnNSQMessageRecieved(NSQMessageEventArgs e)
         {
-            this.InFlight++;
+            System.Threading.Interlocked.Decrement(ref _readyCount);
+
+            if (_readyCount == 0)
+            {
+                //signal failure??
+                return;
+            }
+            
+            System.Threading.Interlocked.Increment(ref _processingCount);
 
             if (NSQMessageRecieved != null)
                 NSQMessageRecieved(this, e);
 
-            this.InFlight--;
+            System.Threading.Interlocked.Decrement(ref _processingCount);
+            System.Threading.Interlocked.Increment(ref _readyCount);
+            UpdateReadyCount();
         }
         #endregion
     }

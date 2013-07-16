@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using NSQnet.Extensions;
+using idict = System.Collections.Generic.IDictionary<string, object>;
+using dict = System.Collections.Generic.Dictionary<string, object>;
 
 namespace NSQnet
 {
@@ -33,15 +35,13 @@ namespace NSQnet
         /// </summary>
         public Int32 Port { get; set; }
 
-        protected HttpWebRequest _getHttpRequest(String absolutePath, object parameters = null)
-        {
-            if (parameters != null)
-                return _getHttpRequestImpl(absolutePath, parameters.ToDynamic());
-            else
-                return _getHttpRequestImpl(absolutePath, null);
-        }
-
-        protected HttpWebRequest _getHttpRequestImpl(String absolutePath, IDictionary<String, Object> parameters)
+        /// <summary>
+        /// Request factory.
+        /// </summary>
+        /// <param name="absolutePath"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        protected HttpWebRequest _getHttpRequest(String absolutePath, idict parameters = null)
         {
             if (String.IsNullOrWhiteSpace(this.Hostname))
                 throw new ArgumentException("Hostname must be set.", "Hostname");
@@ -64,12 +64,15 @@ namespace NSQnet
             return (HttpWebRequest)WebRequest.Create(targetUri);
         }
 
-        protected async Task<String> _getHttpResponseBody(String absolutePath, object parameters)
+        /// <summary>
+        /// Make the resquest (async) and return the full text of the body.
+        /// </summary>
+        /// <param name="absolutePath"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        protected async Task<String> _getHttpResponseBody(String absolutePath, idict parameters = null)
         {
-            if (null != parameters && !(parameters is IDictionary<String, Object>))
-                parameters = parameters.ToDynamic();
-
-            var request = _getHttpRequestImpl(absolutePath, parameters as IDictionary<String, Object>);
+            var request = _getHttpRequest(absolutePath, parameters);
             var response = await request.GetResponseAsync() as HttpWebResponse;
             return response.GetResponseStream().ReadAll();
         }
@@ -103,12 +106,12 @@ namespace NSQnet
 
         public async Task<IEnumerable<NSQProducer>> ProducersForTopicAsync(String topicName)
         {
-            var responseBody = await _getHttpResponseBody("/lookup", new { topic = topicName });
+            var responseBody = await _getHttpResponseBody("/lookup", new dict() { { "topic", topicName } } );
 
             dynamic responseData = _getDataFromResponse(responseBody);
             IEnumerable<Object> values = responseData.producers;
             if (values != null && values.Any())
-                return values.Select(_ => Utility.Reflection.MarshallAs<NSQProducer>(_ as IDictionary<String, Object>));
+                return values.Select(_ => Utility.Reflection.MarshallAs<NSQProducer>(_ as idict));
             else
                 return new List<NSQProducer>();
         }
@@ -120,7 +123,7 @@ namespace NSQnet
 
         public async Task<IEnumerable<String>> TopicsAsync()
         {
-            var responseBody = await _getHttpResponseBody("/topics", null);
+            var responseBody = await _getHttpResponseBody("/topics");
             dynamic responseData = _getDataFromResponse(responseBody);
             IEnumerable<object> list = responseData.topics;
 
@@ -137,7 +140,7 @@ namespace NSQnet
 
         public async Task<IEnumerable<String>> ChannelsForTopicAsync(String topicName)
         {
-            var responseBody = await _getHttpResponseBody("/channels", null);
+            var responseBody = await _getHttpResponseBody("/channels");
             dynamic responseData = _getDataFromResponse(responseBody);
             IEnumerable<object> list = responseData.channels;
 
@@ -154,11 +157,11 @@ namespace NSQnet
 
         public async Task<IEnumerable<NSQProducer>> NodesAsync()
         {
-            var responseBody = await _getHttpResponseBody("/nodes", null);
+            var responseBody = await _getHttpResponseBody("/nodes");
             dynamic responseData = _getDataFromResponse(responseBody);
             IEnumerable<Object> values = responseData.producers;
             if (values != null && values.Any())
-                return values.Select(_ => Utility.Reflection.MarshallAs<NSQProducer>(_ as IDictionary<String, Object>));
+                return values.Select(_ => Utility.Reflection.MarshallAs<NSQProducer>(_ as idict));
             else
                 return new List<NSQProducer>();
         }
@@ -170,7 +173,7 @@ namespace NSQnet
 
         public async Task<Boolean> DeleteTopicAsync(String topicName)
         {
-            var request = _getHttpRequest("/delete_topic", new { topic = topicName });
+            var request = _getHttpRequest("/delete_topic", new dict { { "topic", topicName } } );
             var response = await request.GetResponseAsync() as HttpWebResponse;
             String responseBody = response.GetResponseStream().ReadAll();
             return response.StatusCode == HttpStatusCode.OK && responseBody.Equals("OK", StringComparison.InvariantCultureIgnoreCase);
@@ -183,7 +186,7 @@ namespace NSQnet
 
         public async Task<Boolean> DeleteChannelAsync(String channelName, String nodeName)
         {
-            var request = _getHttpRequest("/delete_channel", new { channel = channelName, node = nodeName });
+            var request = _getHttpRequest("/delete_channel", new dict { { "channel", channelName }, { "node", nodeName } });
             var response = await request.GetResponseAsync() as HttpWebResponse;
             String responseBody = response.GetResponseStream().ReadAll();
             return response.StatusCode == HttpStatusCode.OK && responseBody.Equals("OK", StringComparison.InvariantCultureIgnoreCase);
@@ -196,7 +199,7 @@ namespace NSQnet
 
         public async Task<Boolean> TombstoneProducerAsync(String topicName, String nodeName)
         {
-            var request = _getHttpRequest("/tombstone_topic_producer", new { channel = topicName, node = nodeName });
+            var request = _getHttpRequest("/tombstone_topic_producer", new dict{ { "topic", topicName} , { "node", nodeName } });
             var response = await request.GetResponseAsync() as HttpWebResponse;
             String responseBody = response.GetResponseStream().ReadAll();
             return response.StatusCode == HttpStatusCode.OK && responseBody.Equals("OK", StringComparison.InvariantCultureIgnoreCase);
@@ -214,7 +217,7 @@ namespace NSQnet
             return Utility.Reflection.MarshallAs<NSQServerInfo>(data);
         }
 
-        protected static String _dictToQS(IDictionary<String, Object> parameters)
+        protected static String _dictToQS(idict parameters)
         {
             return String.Join("&", parameters.Select(_ => String.Format("{0}={1}", _.Key, Uri.EscapeDataString(_.Value.ToString()))));
         }
@@ -230,7 +233,7 @@ namespace NSQnet
     {
         public String Address { get; set; }
         public String Hostname { get; set; }
-        public String BroadcastAddress { get; set; }
+        public String Broadcast_Address { get; set; }
         public Int64 TCP_Port { get; set; }
         public Int64 Http_Port { get; set; }
         public String Version { get; set; }
