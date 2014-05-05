@@ -318,7 +318,6 @@ namespace NSQnet
         {
             var asciiBytes = ConvertToAscii(unicode);
             _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
-            _networkStreamLock.ExitWriteLock();
         }
 
         private void WriteBinary(Byte[] binary)
@@ -326,7 +325,7 @@ namespace NSQnet
             _networkStreamLock.EnterWriteLock();
             try
             {
-                WriteBinary(binary);
+                _unsafe_writeBinary(binary);
             }
             finally
             {
@@ -340,7 +339,7 @@ namespace NSQnet
             _networkStreamLock.EnterWriteLock();
             try
             {
-                WriteBinary(asciiBytes);
+                _unsafe_writeBinary(asciiBytes);
             }
             finally
             {
