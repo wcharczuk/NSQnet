@@ -151,12 +151,15 @@ namespace NSQnet
 
         #region Events
 
-        public event NSQMessageRecievedHandler NSQMessageRecieved;
+        public event NSQMessageRecievedHandler NSQMessageReceived;
 
         public void OnNSQMessageRecieved(NSQMessageEventArgs e)
         {
-            if (NSQMessageRecieved != null)
-                NSQMessageRecieved(this, e);
+            var handler = this.NSQMessageReceived;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
         }
 
         private async void SignalMessageRecievedEvent(NSQMessageEventArgs e)
@@ -169,8 +172,9 @@ namespace NSQnet
             NSQProtocol _protocol = this;
             return Task.Run(() =>
             {
-                if (NSQMessageRecieved != null)
-                    NSQMessageRecieved(_protocol, e);
+                var handler = this.NSQMessageReceived;
+                if (handler != null)
+                    handler(_protocol, e);
             });
         }
 
@@ -178,8 +182,9 @@ namespace NSQnet
 
         public void OnNSQProtocolDisconnected(EventArgs e)
         {
-            if (NSQProtocolDisconnected != null)
-                NSQProtocolDisconnected(this, e);
+            var handler = this.NSQProtocolDisconnected;
+            if (handler != null)
+                handler(this, e);
         }
 
         #endregion
@@ -195,8 +200,12 @@ namespace NSQnet
             json.feature_negotiation = feature_negotiation;
 
             var jsonText = JsonSerializer.Current.SerializeObject(json);
-            WriteAscii("IDENTIFY\n");
-            WriteBinary(PackMessage(jsonText));
+
+            SynchronizedWriteAction(() =>
+            {
+                _unsafe_writeAscii("IDENTIFY\n");
+                _unsafe_writeBinary(PackMessage(jsonText));
+            });
         }
 
         public void Subscribe(String topic_name, String channel_name)
@@ -221,17 +230,18 @@ namespace NSQnet
 
             var json = JsonSerializer.Current.SerializeObject(data);
             var bytes = PackMessage(json);
-   
-            WriteAscii(String.Format("PUB {0}\n", topic_name));
-            WriteBinary(bytes);
+
+            SynchronizedWriteAction(() =>
+            {
+                _unsafe_writeAscii(String.Format("PUB {0}\n", topic_name));
+                _unsafe_writeBinary(bytes);
+            });
         }
 
         public void MultiPublish(String topic_name, List<Object> data)
         {
             if (!CheckName(topic_name))
                 throw new Exception("Bad topic_name");
-
-            WriteAscii(String.Format("MPUB {0}\n", topic_name));
 
             List<String> jsonData = data.Select(d => JsonSerializer.Current.SerializeObject(d)).ToList();
             List<Byte[]> packed = jsonData.Select(js => PackMessage(js)).ToList();
@@ -248,14 +258,18 @@ namespace NSQnet
             Array.Reverse(numberOfMessagesBytes);
             Array.Copy(numberOfMessagesBytes, 0, combined, 4, 4);
 
-            int cursor = 8; 
+            int cursor = 8;
             foreach (var bytes in packed)
             {
                 Array.Copy(bytes, 0, combined, cursor, bytes.Length);
                 cursor += bytes.Length;
             }
 
-            WriteBinary(combined);
+            SynchronizedWriteAction(() =>
+            {
+                _unsafe_writeAscii(String.Format("MPUB {0}\n", topic_name));
+                _unsafe_writeBinary(combined);
+            });
         }
 
         public void Ready(Int64 count)
@@ -295,12 +309,24 @@ namespace NSQnet
 
         #region Utility Methods
 
+        private void _unsafe_writeBinary(Byte[] binary)
+        {
+            _networkStream.Write(binary, 0, binary.Length);
+        }
+
+        private void _unsafe_writeAscii(String unicode)
+        {
+            var asciiBytes = ConvertToAscii(unicode);
+            _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
+            _networkStreamLock.ExitWriteLock();
+        }
+
         private void WriteBinary(Byte[] binary)
         {
             _networkStreamLock.EnterWriteLock();
             try
             {
-                _networkStream.Write(binary, 0, binary.Length);
+                WriteBinary(binary);
             }
             finally
             {
@@ -314,7 +340,20 @@ namespace NSQnet
             _networkStreamLock.EnterWriteLock();
             try
             {
-                _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
+                WriteBinary(asciiBytes);
+            }
+            finally
+            {
+                _networkStreamLock.ExitWriteLock();
+            }
+        }
+
+        private void SynchronizedWriteAction(Action action)
+        {
+            _networkStreamLock.EnterWriteLock();
+            try
+            {
+                action();
             }
             finally
             {

@@ -52,7 +52,7 @@ namespace NSQnet
         {
             base.Initialize();
             _readyCount = MaxReadyCount;
-            _protocol.NSQMessageRecieved += new NSQMessageRecievedHandler(NSQProtocolMessageRecieved);
+            _protocol.NSQMessageReceived += new NSQMessageRecievedHandler(NSQProtocolMessageRecieved);
         }
 
         public Int32 MaxReadyCount { get; set; }
