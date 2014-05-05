@@ -211,7 +211,7 @@ namespace NSQnet
         public void Subscribe(String topic_name, String channel_name)
         {
             if (!CheckName(topic_name))
-                throw new ArgumentException("Bad Name");
+                throw new ArgumentException("Bad Name", "topic_name");
 
             if (CheckName(channel_name))
             {
@@ -226,7 +226,7 @@ namespace NSQnet
         public void Publish(String topic_name, object data)
         {
             if (!CheckName(topic_name))
-                throw new Exception("Bad topic_name");
+                throw new ArgumentException("Bad Name", "topic_name");
 
             var json = JsonSerializer.Current.SerializeObject(data);
             var bytes = PackMessage(json);
@@ -241,7 +241,7 @@ namespace NSQnet
         public void MultiPublish(String topic_name, List<Object> data)
         {
             if (!CheckName(topic_name))
-                throw new Exception("Bad topic_name");
+                throw new ArgumentException("Bad Name", "topic_name");
 
             List<String> jsonData = data.Select(d => JsonSerializer.Current.SerializeObject(d)).ToList();
             List<Byte[]> packed = jsonData.Select(js => PackMessage(js)).ToList();
