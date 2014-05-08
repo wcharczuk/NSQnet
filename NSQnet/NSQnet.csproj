@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AgileObject.cs" />
+    <Compile Include="NSQ.cs" />
     <Compile Include="NSQProtocolDisconnectedHandler.cs" />
     <Compile Include="FrameType.cs" />
     <Compile Include="JSONSerializer.cs" />

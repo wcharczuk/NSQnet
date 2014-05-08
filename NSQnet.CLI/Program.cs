@@ -36,6 +36,12 @@ namespace NSQnet.CLI
 
     class Program
     {
+        static object _consoleLock = new object();
+
+        static int processed = 0;
+        static int last_processed = 0;
+        static DateTime last_timestamp;
+
         static void Main(string[] args)
         {
             var options = new Options();
@@ -47,95 +53,56 @@ namespace NSQnet.CLI
                 return;
             }
             Console.WriteLine("NSQnet CLI 1.0");
+            var line = new StringBuilder();
             for (int x = 0; x < Console.WindowWidth; x++)
             {
-                Console.Write("=");
+                line.Append("=");
             }
-            Console.WriteLine();
+            Console.WriteLine(line.ToString());
 
-            NSQLookup lookupClient = new NSQLookup(options.Hostname, options.Port);
-            
-            var up = lookupClient.Ping();
-            
-            Console.WriteLine("NSQLookupd Server is " + ( up ? "UP" : "NOT OK"));
+            var nsq = new NSQ(options.Hostname, options.Port);
 
-            if(up)
+            nsq.MessageHandler = (sender, e) =>
             {
-                while (true)
+                var sub = sender as NSQSubscriber;
+                var main_subscription = sub.Subscriptions.FirstOrDefault();
+                /*
+                lock(_consoleLock)
                 {
-                    PollForNewSubscribers(lookupClient);
-                    Thread.Sleep(500); //poll every half second for new 
-                }
-            }
-        }
+                    Console.Write(String.Format("{0}::{2}.{1} MSG ", sub.Hostname, main_subscription.Channel, main_subscription.Topic));
+                    Console.WriteLine(e.Message.Body);
+                }*/
+                System.Threading.Interlocked.Increment(ref processed);
 
-        public static ConcurrentDictionary<String, NSQSubscriber> _subscribers = new ConcurrentDictionary<string,NSQSubscriber>();
-
-        public static void PollForNewSubscribers(NSQLookup lookupClient)
-        {
-            var topics = lookupClient.Topics();
-
-            foreach (var topic in topics)
-            {
-	            foreach(var producer in lookupClient.ProducersForTopic(topic))
-	            {
-	                if (!_subscribers.ContainsKey(producer.Hostname.ToLower()))
-	                {
-						var sub = GetSubscriber(producer.Hostname.ToLower(), producer.Hostname.ToLower(), producer.Hostname, (int)producer.TCP_Port, topic);
-	                    _subscribers.AddOrUpdate(sub.LongIdentifier, sub, (long_id, oldSub) => sub);
-	                }
-                    else if (!_subscribers[producer.Hostname.ToLower()].IsSubscribed(topic, topic))
-                    {
-                        _subscribers[producer.Hostname.ToLower()].Subscribe(topic, topic);
-                    }
-	            }
-            }
-        }
-
-        public static NSQSubscriber GetSubscriber(String shortId, String longId, String host, Int32 port, String topicName, String channelName = null)
-        {
-            var sub = new NSQSubscriber(shortId, longId, host, port);
-
-            channelName = channelName ?? topicName;
-
-            sub.Initialize();
-
-            //closures are AWESOME and you should use them.
-            Action<Object, NSQMessageEventArgs> messageHandler = (sender, e) =>
-            {
-                Console.Write(String.Format("{0}::{2}.{1} MSG ", host, channelName, topicName));
-                Console.WriteLine(e.Message.Body);
                 sub.Finish(e.Message.MessageId);
                 sub.ResetReadyCount();
             };
 
-            Action<Object, EventArgs> disconnectedHandler = (sender, e) =>
+            nsq.DisconnectedHandler = (sender, e) =>
             {
-                var disconnected_sub = (sender as NSQSubscriber);
-
-                Console.WriteLine(String.Format("{0}::{2}.{1} Disconnected", host, channelName, topicName));
-                
-                NSQSubscriber cached_sub = null;
-                _subscribers.TryRemove(disconnected_sub.LongIdentifier.ToLower(), out cached_sub);
-
-                disconnected_sub.Dispose();
-                cached_sub.Dispose();
-
-                disconnected_sub = null;
-                cached_sub = null;
+                var sub = (sender as NSQSubscriber);
+                var main_subscription = sub.Subscriptions.FirstOrDefault();
+                Console.WriteLine(String.Format("{0}::{2}.{1} Disconnected", sub.Hostname, main_subscription.Channel, main_subscription.Topic));
             };
 
-            sub.MaxReadyCount = 5;
-            
-            sub.NSQMessageRecieved += new NSQMessageRecievedHandler(messageHandler);
-            sub.NSQClientDisconnected += new NSQProtocolDisconnectedHandler(disconnectedHandler);
+            new Task(() =>
+            {
+                while (true)
+                {
+                    var delta = processed - last_processed;
+                    var time_delta = DateTime.Now - last_timestamp;
+                    var rate = (float)delta / (float)(time_delta.TotalMilliseconds / 1000);
 
-            sub.Subscribe(topicName, channelName);
-            sub.ResetReadyCount();
+                    Console.WriteLine(String.Format("Processed {0} Messages at a rate of {1} m/sec", processed, rate));
+                    last_timestamp = DateTime.Now;
+                    last_processed = processed;
 
-            Console.WriteLine(String.Format("{0}::{2}.{1} Subscribed", host, channelName, topicName));
+                    Thread.Sleep(500);
+                }
+            }).Start();
 
-            return sub;
+            last_timestamp = DateTime.Now;
+            nsq.Listen();
         }
     }
 }

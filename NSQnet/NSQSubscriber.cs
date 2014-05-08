@@ -61,6 +61,14 @@ namespace NSQnet
 
         public ConcurrentBag<Subscription> _subscriptions = new ConcurrentBag<Subscription>();
 
+        public IEnumerable<Subscription> Subscriptions
+        {
+            get
+            {
+                return _subscriptions;
+            }
+        }
+
         public Boolean IsSubscribed(String topic, String channel)
         {
             return _subscriptions.Contains(new Subscription() { Topic = topic, Channel = channel });

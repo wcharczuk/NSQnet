@@ -32,6 +32,9 @@ namespace NSQnet
 
         protected NSQProtocol _protocol = null;
 
+        public String Hostname { get { return _protocol.Hostname; } }
+        public Int32 Port { get { return _protocol.Port; } }
+
         public TimeSpan ReadTimeout { get; set; }
         public TimeSpan WriteTimeout { get; set; }
 
