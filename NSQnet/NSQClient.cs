@@ -48,8 +48,11 @@ namespace NSQnet
         public event NSQProtocolDisconnectedHandler NSQClientDisconnected;
         public void OnNSQClientDisconnected(EventArgs e)
         {
-            if (NSQClientDisconnected != null)
-                NSQClientDisconnected(this, e);
+            var handler = this.NSQClientDisconnected;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
         }
 
         public Boolean IsConnected

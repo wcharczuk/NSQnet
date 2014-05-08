@@ -12,11 +12,11 @@
     <summary>NSQ Client for .net</summary>
     <description>NSQ Client for .net</description>
     <releaseNotes>
-      * 0.5.2       - Bug Fixes.
-      * 0.5.1       - Bug Fixes.
-                    - Changed Description
-      * 0.5.0       - Initial Release.
-                    - API Subject to change, may contain defects.
+* 0.5.2       - Bug Fixes.
+* 0.5.1       - Bug Fixes.
+              - Changed Description
+* 0.5.0       - Initial Release.
+              - API Subject to change, may contain defects.
     </releaseNotes>
     <copyright>Copyright ClothesHorse, 2013</copyright>
     <tags>nsq messagequeue queue</tags>

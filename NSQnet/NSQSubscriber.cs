@@ -25,8 +25,10 @@ namespace NSQnet
             public override bool Equals(object obj)
             {
                 var that = obj as Subscription;
-                if(that == null)
+                if (that == null)
+                {
                     return false;
+                }
 
                 return this.HashId.Equals(that.HashId);
             }
@@ -151,14 +153,14 @@ namespace NSQnet
 
             if (_readyCount == 0)
             {
-                //signal failure??
                 return;
             }
             
             System.Threading.Interlocked.Increment(ref _processingCount);
 
-            if (NSQMessageRecieved != null)
-                NSQMessageRecieved(this, e);
+            var handler = this.NSQMessageRecieved;
+            if (handler != null)
+                handler(this, e);
 
             System.Threading.Interlocked.Decrement(ref _processingCount);
             System.Threading.Interlocked.Increment(ref _readyCount);
