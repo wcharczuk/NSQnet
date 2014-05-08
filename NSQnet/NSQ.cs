@@ -17,7 +17,7 @@ namespace NSQnet
         {
             this.PollEveryMilliseconds = 500;
             this.MaxReadyCount = 5; 
-            this.Topics = new List<String>();
+            this.Topics = new HashSet<String>();
         }
 
         public NSQ(String hostname) 
@@ -49,7 +49,7 @@ namespace NSQnet
 
         public Int32 PollEveryMilliseconds { get; set; }
 
-        public List<String> Topics { get; set; }
+        public HashSet<String> Topics { get; set; }
         public IEnumerable<String> AvailableTopics { get { return _lookupClient.Topics(); } }
 
         private NSQLookup _lookupClient { get; set; }
@@ -86,16 +86,19 @@ namespace NSQnet
 
             foreach (var topic in topics)
             {
-                foreach (var producer in _lookupClient.ProducersForTopic(topic))
+                if (this.Topics.Any() && this.Topics.Contains(topic))
                 {
-                    if (!_mappedSubscribers.ContainsKey(producer.Hostname.ToLower()))
+                    foreach (var producer in _lookupClient.ProducersForTopic(topic))
                     {
-                        var sub = _getSubscriber(producer.Hostname.ToLower(), producer.Hostname.ToLower(), producer.Hostname, (int)producer.TCP_Port, topic);
-                        _mappedSubscribers.AddOrUpdate(sub.LongIdentifier, sub, (long_id, oldSub) => sub);
-                    }
-                    else if (!_mappedSubscribers[producer.Hostname.ToLower()].IsSubscribed(topic, topic))
-                    {
-                        _mappedSubscribers[producer.Hostname.ToLower()].Subscribe(topic, topic);
+                        if (!_mappedSubscribers.ContainsKey(producer.Hostname.ToLower()))
+                        {
+                            var sub = _getSubscriber(producer.Hostname.ToLower(), producer.Hostname.ToLower(), producer.Hostname, (int)producer.TCP_Port, topic);
+                            _mappedSubscribers.AddOrUpdate(sub.LongIdentifier, sub, (long_id, oldSub) => sub);
+                        }
+                        else if (!_mappedSubscribers[producer.Hostname.ToLower()].IsSubscribed(topic, topic))
+                        {
+                            _mappedSubscribers[producer.Hostname.ToLower()].Subscribe(topic, topic);
+                        }
                     }
                 }
             }

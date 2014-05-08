@@ -84,6 +84,8 @@ namespace NSQnet.CLI
                 var main_subscription = sub.Subscriptions.FirstOrDefault();
                 Console.WriteLine(String.Format("{0}::{2}.{1} Disconnected", sub.Hostname, main_subscription.Channel, main_subscription.Topic));
             };
+            
+            nsq.Topics.Add("main");
 
             new Task(() =>
             {
