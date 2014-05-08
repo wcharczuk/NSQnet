@@ -23,16 +23,13 @@ nsq.MessageHandler = (sender, e) =>
     var sub = sender as NSQSubscriber;
     var main_subscription = sub.Subscriptions.FirstOrDefault();
     
-    lock(_consoleLock)
-    {
-        Console.Write(String.Format("{0}::{2}.{1} MSG "
-            , sub.Hostname
-            , main_subscription.Channel
-            , main_subscription.Topic
-            )
-        );
-        Console.WriteLine(e.Message.Body);
-    }
+    Console.Write(String.Format("{0}::{2}.{1} MSG "
+        , sub.Hostname
+        , main_subscription.Channel
+        , main_subscription.Topic
+        )
+    );
+    Console.WriteLine(e.Message.Body);
 
     sub.Finish(e.Message.MessageId);
     sub.ResetReadyCount();
