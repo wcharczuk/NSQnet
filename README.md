@@ -11,6 +11,36 @@ This project is a .net implementation of the [NSQ protocol](https://github.com/b
 
 ###Examples###
 
+**Lookup Client**
+
+This is the main subscriber system you should use. This class automatically picks up new producers from the lookup server, and subscribes to them. This class can optionally be limited to select topics. 
+
+```C#
+var nsq = new NSQ("127.0.0.1");
+
+nsq.MessageHandler = (sender, e) =>
+{
+    var sub = sender as NSQSubscriber;
+    var main_subscription = sub.Subscriptions.FirstOrDefault();
+    
+    lock(_consoleLock)
+    {
+        Console.Write(String.Format("{0}::{2}.{1} MSG "
+            , sub.Hostname
+            , main_subscription.Channel
+            , main_subscription.Topic
+            )
+        );
+        Console.WriteLine(e.Message.Body);
+    }
+
+    sub.Finish(e.Message.MessageId);
+    sub.ResetReadyCount();
+};
+
+nsq.Listen();
+```
+
 **Subscriber**
 ```C#
 var sub = new NSQSubscriber("127.0.0.1", 4150);
