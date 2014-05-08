@@ -41,7 +41,7 @@ nsq.MessageHandler = (sender, e) =>
 nsq.Listen();
 ```
 
-**Subscriber**
+**Single Subscriber**
 ```C#
 var sub = new NSQSubscriber("127.0.0.1", 4150);
 
