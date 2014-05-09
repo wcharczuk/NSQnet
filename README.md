@@ -35,6 +35,9 @@ nsq.MessageHandler = (sender, e) =>
     sub.ResetReadyCount();
 };
 
+nsq.Topics.Add("activity");
+nsq.Topics.Add("informational");
+
 nsq.Listen();
 ```
 
