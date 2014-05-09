@@ -23,39 +23,15 @@ nsq.MessageHandler = (sender, e) =>
     var sub = sender as NSQSubscriber;
     var main_subscription = sub.Subscriptions.FirstOrDefault();
     
-    Console.Write(String.Format("{0}::{2}.{1} MSG "
-        , sub.Hostname
-        , main_subscription.Channel
-        , main_subscription.Topic
-        )
-    );
-    Console.WriteLine(e.Message.Body);
-
-    sub.Finish(e.Message.MessageId);
-    sub.ResetReadyCount();
-};
-
-//comment these out to receive messages from all topics.
-nsq.Topics.Add("activity");
-nsq.Topics.Add("informational");
-
-nsq.Listen();
-```
-
-**Single Subscriber**
-```C#
-var sub = new NSQSubscriber("127.0.0.1", 4150);
-
-sub.Initialize(); //connects to nsqd and identifies.
-sub.MaxReadyCount = 5; //or 2500, or whatever you want.
-
-Action<Object, NSQMessageEventArgs> messageHandler = (sender, e) =>
-{
-    //do your message processing here, can be as complex or long winded
-    //as you want because this action will not block the main thread.
     try
     {
-        Console.WriteLine("Processed Message");
+        Console.Write(String.Format("{0}::{2}.{1} MSG "
+            , sub.Hostname
+            , main_subscription.Channel
+            , main_subscription.Topic
+            )
+        );
+        Console.WriteLine(e.Message.Body);
         sub.Finish(e.Message.MessageId);
     }
     catch
@@ -64,10 +40,11 @@ Action<Object, NSQMessageEventArgs> messageHandler = (sender, e) =>
     }
 };
 
-//this event hook will fire in a separate task/threadpool context
-sub.NSQMessageRecieved += new NSQMessageRecievedHandler(messageHandler);
-sub.Subscribe("activities", "activities");
-sub.ResetReadyCount(); //here we go.
+//comment these out to receive messages from all topics.
+nsq.Topics.Add("activity");
+nsq.Topics.Add("informational");
+
+nsq.Listen();
 ```
 
 **Publisher**
