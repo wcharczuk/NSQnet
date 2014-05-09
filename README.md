@@ -35,6 +35,7 @@ nsq.MessageHandler = (sender, e) =>
     sub.ResetReadyCount();
 };
 
+//comment these out to receive messages from all topics.
 nsq.Topics.Add("activity");
 nsq.Topics.Add("informational");
 
