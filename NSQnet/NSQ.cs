@@ -90,14 +90,16 @@ namespace NSQnet
                 {
                     foreach (var producer in _lookupClient.ProducersForTopic(topic))
                     {
-                        if (!_mappedSubscribers.ContainsKey(producer.Hostname.ToLower()))
+                        var addr = (producer.Broadcast_Address ?? producer.Hostname).ToLower();
+
+                        if (!_mappedSubscribers.ContainsKey(addr))
                         {
-                            var sub = _getSubscriber(producer.Hostname.ToLower(), producer.Hostname.ToLower(), producer.Hostname, (int)producer.TCP_Port, topic);
+                            var sub = _getSubscriber(addr, addr, addr, (int) producer.TCP_Port, topic);
                             _mappedSubscribers.AddOrUpdate(sub.LongIdentifier, sub, (long_id, oldSub) => sub);
                         }
-                        else if (!_mappedSubscribers[producer.Hostname.ToLower()].IsSubscribed(topic, topic))
+                        else if (!_mappedSubscribers[addr].IsSubscribed(topic, topic))
                         {
-                            _mappedSubscribers[producer.Hostname.ToLower()].Subscribe(topic, topic);
+                            _mappedSubscribers[addr].Subscribe(topic, topic);
                         }
                     }
                 }
