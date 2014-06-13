@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using log4net;
 
+[assembly: log4net.Config.XmlConfigurator(Watch = true)] 
+
 namespace NSQnet.Apps.RandomService
 {
     class Program
@@ -26,6 +28,11 @@ namespace NSQnet.Apps.RandomService
                 PrintVersion(log);
                 return;
             }
+
+            log.InfoFormat("NSQD HTTP Address: {0}", options.NsqdHttpAddress);
+            log.InfoFormat("Topic: {0}", options.Topic);
+            log.InfoFormat("Interval (s): {0}", options.Interval);
+            log.InfoFormat("Count: {0}", options.Continuous ? "continuous" : options.Count.ToString());
 
             var svc = new RandomService(options);
             svc.Start().Wait();

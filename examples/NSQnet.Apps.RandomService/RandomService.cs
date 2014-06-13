@@ -21,16 +21,19 @@ namespace NSQnet.Apps.RandomService
 
         public async Task Start()
         {
-            const int ReportIntervalSeconds = 60;
+            const int ReportIntervalSeconds = 10;
 
             var c = options.Count;
             var r = new Random();
             var generated = 0L;
+            var last_generated = 0L;
             var notBefore = DateTime.Now.AddSeconds(ReportIntervalSeconds);
 
             while (options.Continuous || c > 0)
             {
-                var body = string.Format(@"{{""value"": {0}}}", r.Next());
+                var when = DateTime.Now.ToString("o");
+
+                var body = string.Format(@"{{""value"": {0}, ""timestamp"": ""{1}""}}", r.Next(), when);
 
                 await NSQUtil.PublishAsync(options.NsqdHttpAddress, options.Topic, body);
 
@@ -38,9 +41,10 @@ namespace NSQnet.Apps.RandomService
 
                 if (DateTime.Now > notBefore)
                 {
-                    log.InfoFormat("{0} random numbers generated", generated);
+                    log.InfoFormat("{0} random numbers generated (+{1})", generated, generated - last_generated);
 
                     notBefore = DateTime.Now.AddSeconds(ReportIntervalSeconds);
+                    last_generated = generated;
                 }
 
                 Thread.Sleep(options.Interval);
