@@ -17,6 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{B28923DD-D
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{88E88EA7-654C-4ABC-BE9F-61830441851F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NSQnet.Apps.RandomService", "examples\NSQnet.Apps.RandomService\NSQnet.Apps.RandomService.csproj", "{1948C8FA-8805-4D05-8017-3773B8CD69B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,13 +39,18 @@ Global
 		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDF79124-32BE-4DF2-B1E1-FBA696DDCA59}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-	EndGlobalSection
-	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = NSQnet.CLI\NSQnet.CLI.csproj
+		{1948C8FA-8805-4D05-8017-3773B8CD69B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1948C8FA-8805-4D05-8017-3773B8CD69B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1948C8FA-8805-4D05-8017-3773B8CD69B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1948C8FA-8805-4D05-8017-3773B8CD69B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1948C8FA-8805-4D05-8017-3773B8CD69B1} = {88E88EA7-654C-4ABC-BE9F-61830441851F}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = NSQnet.CLI\NSQnet.CLI.csproj
 	EndGlobalSection
 EndGlobal
