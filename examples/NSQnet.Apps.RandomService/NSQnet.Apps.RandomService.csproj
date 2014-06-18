@@ -4,17 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{210B2D86-71D7-45BA-B518-77151A020665}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{1948C8FA-8805-4D05-8017-3773B8CD69B1}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NSQnet</RootNamespace>
-    <AssemblyName>NSQnet</AssemblyName>
+    <RootNamespace>NSQnet.Apps.RandomService</RootNamespace>
+    <AssemblyName>NSQnet.Apps.RandomService</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <ProductVersion>12.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,18 +23,20 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\NSQnet.XML</DocumentationFile>
-    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="CommandLine">
+      <HintPath>..\..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -46,29 +47,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AgileObject.cs" />
-    <Compile Include="NSQ.cs" />
-    <Compile Include="NSQUtil.cs" />
-    <Compile Include="NSQProtocolDisconnectedHandler.cs" />
-    <Compile Include="FrameType.cs" />
-    <Compile Include="JSONSerializer.cs" />
-    <Compile Include="NSQClient.cs" />
-    <Compile Include="NSQLookup.cs" />
-    <Compile Include="NSQPublisher.cs" />
-    <Compile Include="NSQMessage.cs" />
-    <Compile Include="NSQMessageEventArgs.cs" />
-    <Compile Include="NSQMessageRecievedHandler.cs" />
-    <Compile Include="NSQProtocol.cs" />
-    <Compile Include="NSQProtocolException.cs" />
-    <Compile Include="NSQSubscriber.cs" />
-    <Compile Include="ObjectExtensions.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="ProgramOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="NSQResponseString.cs" />
-    <Compile Include="Reflection.cs" />
-    <Compile Include="StreamExtensions.cs" />
+    <Compile Include="RandomService.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\NSQnet\NSQnet.csproj">
+      <Project>{210b2d86-71d7-45ba-b518-77151a020665}</Project>
+      <Name>NSQnet</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
