@@ -90,7 +90,7 @@ namespace NSQnet
                 {
                     foreach (var producer in _lookupClient.ProducersForTopic(topic))
                     {
-                        var addr = (producer.Broadcast_Address ?? producer.Hostname).ToLower();
+                        var addr = (producer.Address ?? producer.Broadcast_Address ?? producer.Hostname).ToLower();
 
                         if (!_mappedSubscribers.ContainsKey(addr))
                         {

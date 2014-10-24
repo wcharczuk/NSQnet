@@ -124,10 +124,19 @@ namespace NSQnet
                 if (size != 0)
                 {
                     byte[] buffer = new Byte[size];
-                    _networkStream.Read(buffer, 0, (int)size);
-
+                    var read = 0;
+                    while (read < size)
+                    {
+                        var readCount = _networkStream.Read(buffer, read, (int)size - read);
+                        if (readCount < 0)
+                            continue;
+                        if (readCount == 0)
+                            break;
+                        read += readCount;
+                    }
                     return UnpackMessage(size, buffer);
                 }
+
                 return null;
             }
             return null;

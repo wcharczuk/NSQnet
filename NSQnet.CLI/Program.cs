@@ -66,12 +66,12 @@ namespace NSQnet.CLI
             {
                 var sub = sender as NSQSubscriber;
                 var main_subscription = sub.Subscriptions.FirstOrDefault();
-                /*
-                lock(_consoleLock)
+
+                if (e.Message.Body.Length != 84)
                 {
-                    Console.Write(String.Format("{0}::{2}.{1} MSG ", sub.Hostname, main_subscription.Channel, main_subscription.Topic));
-                    Console.WriteLine(e.Message.Body);
-                }*/
+                    throw new Exception("Bad Message!");
+                }
+
                 System.Threading.Interlocked.Increment(ref processed);
 
                 sub.Finish(e.Message.MessageId);
@@ -85,7 +85,7 @@ namespace NSQnet.CLI
                 Console.WriteLine(String.Format("{0}::{2}.{1} Disconnected", sub.Hostname, main_subscription.Channel, main_subscription.Topic));
             };
             
-            nsq.Topics.Add("main");
+            nsq.Topics.Add("load_test");
 
             new Task(() =>
             {
@@ -95,9 +95,12 @@ namespace NSQnet.CLI
                     var time_delta = DateTime.Now - last_timestamp;
                     var rate = (float)delta / (float)(time_delta.TotalMilliseconds / 1000);
 
-                    Console.WriteLine(String.Format("Processed {0} Messages at a rate of {1} m/sec", processed, rate));
-                    last_timestamp = DateTime.Now;
-                    last_processed = processed;
+                    if (delta != 0)
+                    {
+                        Console.WriteLine(String.Format("Processed {0} Messages at a rate of {1} m/sec", processed, rate));
+                        last_timestamp = DateTime.Now;
+                        last_processed = processed;
+                    }
 
                     Thread.Sleep(500);
                 }
