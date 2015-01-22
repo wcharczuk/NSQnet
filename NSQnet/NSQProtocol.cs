@@ -371,13 +371,12 @@ namespace NSQnet
 
         private static Byte[] ConvertToAscii(String unicode)
         {
-            var bytes = System.Text.Encoding.Default.GetBytes(unicode);
-            return System.Text.Encoding.Convert(System.Text.Encoding.Default, System.Text.Encoding.ASCII, bytes);
+            return Encoding.UTF8.GetBytes(unicode);
         }
 
         private static String ConvertFromAscii(Byte[] bytes)
         {
-            return System.Text.Encoding.Default.GetString(System.Text.Encoding.Convert(System.Text.Encoding.ASCII, System.Text.Encoding.Default, bytes));
+            return Encoding.UTF8.GetString(bytes);
         }
 
         private static Byte[] PackMessage(String text)
