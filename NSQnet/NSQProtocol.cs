@@ -11,6 +11,14 @@ namespace NSQnet
 {
     public class NSQProtocol : IDisposable
     {
+        #region Static Constants
+
+        private static readonly Byte[] VERSION = new Byte[4] { 0x20, 0x20, 0x56, 0x32 };
+        private static readonly Int16 MAX_NAME_LENGTH = 32;
+        private static readonly String VALID_NAME_EXPR = "[.a-zA-Z0-9_-]";
+
+        #endregion
+
         public static Boolean CheckName(String name)
         {
             return name != null && name.Length > 1 && name.Length <= MAX_NAME_LENGTH && System.Text.RegularExpressions.Regex.IsMatch(name, VALID_NAME_EXPR);
@@ -35,6 +43,9 @@ namespace NSQnet
         public Int32 HeartbeatInterval { get; set; }
         public Int64 MaximumReadyCount { get; set; }
 
+        private System.Text.Encoding _defaultEncoding = System.Text.Encoding.UTF8;
+        public System.Text.Encoding StringEncoding { get { return _defaultEncoding; } set { _defaultEncoding = value; } }
+
         public Boolean IsConnected
         {
             get
@@ -43,17 +54,17 @@ namespace NSQnet
             }
         }
 
-        private static readonly Byte[] Version = new Byte[4] { 0x20, 0x20, 0x56, 0x32 };
-        private static readonly Int16 MAX_NAME_LENGTH = 32;
-        private static readonly String VALID_NAME_EXPR = "[.a-zA-Z0-9_-]";
-
         private Boolean _continue = true;
+
+        #region Network Connection(s)
 
         private System.Net.Sockets.TcpClient _client = null;
         private System.Net.Sockets.NetworkStream _networkStream = null;
         private System.IO.BinaryReader _networkReader = null;
 
         protected ReaderWriterLockSlim _networkStreamLock = new ReaderWriterLockSlim();
+
+        #endregion
 
         public void Initialize()
         {
@@ -67,7 +78,7 @@ namespace NSQnet
             _client.Connect(hostname: this.Hostname, port: this.Port);
             _networkStream = _client.GetStream();
             _networkReader = new System.IO.BinaryReader(_networkStream);
-            _networkStream.Write(Version, 0, Version.Length);
+            _networkStream.Write(VERSION, 0, VERSION.Length);
 
             ReceiveLoop();
         }
@@ -325,7 +336,7 @@ namespace NSQnet
 
         private void _unsafe_writeAscii(String unicode)
         {
-            var asciiBytes = ConvertToAscii(unicode);
+            var asciiBytes = ConvertToAscii(unicode, this.StringEncoding);
             _networkStream.Write(asciiBytes, 0, asciiBytes.Length);
         }
 
@@ -344,7 +355,7 @@ namespace NSQnet
 
         private void WriteAscii(String unicode)
         {
-            var asciiBytes = ConvertToAscii(unicode);
+            var asciiBytes = ConvertToAscii(unicode, this.StringEncoding);
             _networkStreamLock.EnterWriteLock();
             try
             {
@@ -369,20 +380,20 @@ namespace NSQnet
             }
         }
 
-        private static Byte[] ConvertToAscii(String unicode)
+        private static Byte[] ConvertToAscii(String unicode, System.Text.Encoding encoding = System.Text.Encoding.UTF8)
         {
-            var bytes = System.Text.Encoding.Default.GetBytes(unicode);
-            return System.Text.Encoding.Convert(System.Text.Encoding.Default, System.Text.Encoding.ASCII, bytes);
+            var bytes = encoding.GetBytes(unicode);
+            return System.Text.Encoding.Convert(encoding, System.Text.Encoding.ASCII, bytes);
         }
 
-        private static String ConvertFromAscii(Byte[] bytes)
+        private static String ConvertFromAscii(Byte[] bytes, System.Text.Encoding encoding = System.Text.Encoding.UTF8)
         {
-            return System.Text.Encoding.Default.GetString(System.Text.Encoding.Convert(System.Text.Encoding.ASCII, System.Text.Encoding.Default, bytes));
+            return System.Text.Encoding.Default.GetString(System.Text.Encoding.Convert(System.Text.Encoding.ASCII, encoding, bytes));
         }
 
         private static Byte[] PackMessage(String text)
         {
-            byte[] textBytes = ConvertToAscii(text);
+            byte[] textBytes = ConvertToAscii(text, this.StringEncoding);
             var size = textBytes.Length;
 
             byte[] preBuffer = BitConverter.GetBytes(size);
@@ -397,7 +408,7 @@ namespace NSQnet
 
         private static Byte[] PackMessage(FrameType type, String text)
         {
-            byte[] textBytes = ConvertToAscii(text);
+            byte[] textBytes = ConvertToAscii(text, this.StringEncoding);
             var size = textBytes.Length;
 
             byte[] sizeBuffer = BitConverter.GetBytes(size);
