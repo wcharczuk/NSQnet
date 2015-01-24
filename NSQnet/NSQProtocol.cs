@@ -381,25 +381,17 @@ namespace NSQnet
             }
         }
 
-        private static Byte[] ConvertToAscii(String unicode)
+        private static Byte[] ConvertToAscii(String unicode, System.Text.Encoding encoding = null)
         {
-            return ConvertToAscii(unicode, Encoding.UTF8);
-        }
-
-        private static String ConvertFromAscii(Byte[] bytes)
-        {
-            return ConvertFromAscii(bytes, Encoding.UTF8);
-        }
-
-        private static Byte[] ConvertToAscii(String unicode, System.Text.Encoding encoding)
-        {
+            encoding = encoding ?? System.Text.Encoding.UTF8;
             var bytes = encoding.GetBytes(unicode);
             return System.Text.Encoding.Convert(encoding, System.Text.Encoding.ASCII, bytes);
         }
 
-        private static String ConvertFromAscii(Byte[] bytes, System.Text.Encoding encoding)
+        private static String ConvertFromAscii(Byte[] bytes, System.Text.Encoding encoding = null)
         {
-            return System.Text.Encoding.Default.GetString(System.Text.Encoding.Convert(System.Text.Encoding.ASCII, encoding, bytes));
+            encoding = encoding ?? System.Text.Encoding.UTF8;
+            return encoding.GetString(System.Text.Encoding.Convert(System.Text.Encoding.ASCII, encoding, bytes));
         }
 
         private Byte[] PackMessage(String text)
