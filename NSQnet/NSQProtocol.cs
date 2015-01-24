@@ -16,6 +16,7 @@ namespace NSQnet
         private static readonly Byte[] VERSION = new Byte[4] { 0x20, 0x20, 0x56, 0x32 };
         private static readonly Int16 MAX_NAME_LENGTH = 32;
         private static readonly String VALID_NAME_EXPR = "[.a-zA-Z0-9_-]";
+        private static readonly DateTime EPOCH = new DateTime(1970, 1, 1);
 
         #endregion
 
@@ -27,7 +28,7 @@ namespace NSQnet
         public NSQProtocol()
         {
             this.HeartbeatInterval = 30 * 1000; //the default, 30 seconds.
-            this.MaximumReadyCount = 2500; 
+            this.MaximumReadyCount = 2500;
         }
 
         public NSQProtocol(String hostname, Int32 port) : this()
@@ -380,20 +381,30 @@ namespace NSQnet
             }
         }
 
-        private static Byte[] ConvertToAscii(String unicode, System.Text.Encoding encoding = System.Text.Encoding.UTF8)
+        private static Byte[] ConvertToAscii(String unicode)
+        {
+            return ConvertToAscii(unicode, Encoding.UTF8);
+        }
+
+        private static String ConvertFromAscii(Byte[] bytes)
+        {
+            return ConvertFromAscii(bytes, Encoding.UTF8);
+        }
+
+        private static Byte[] ConvertToAscii(String unicode, System.Text.Encoding encoding)
         {
             var bytes = encoding.GetBytes(unicode);
             return System.Text.Encoding.Convert(encoding, System.Text.Encoding.ASCII, bytes);
         }
 
-        private static String ConvertFromAscii(Byte[] bytes, System.Text.Encoding encoding = System.Text.Encoding.UTF8)
+        private static String ConvertFromAscii(Byte[] bytes, System.Text.Encoding encoding)
         {
             return System.Text.Encoding.Default.GetString(System.Text.Encoding.Convert(System.Text.Encoding.ASCII, encoding, bytes));
         }
 
-        private static Byte[] PackMessage(String text)
+        private Byte[] PackMessage(String text)
         {
-            byte[] textBytes = ConvertToAscii(text, this.StringEncoding);
+            byte[] textBytes = this.StringEncoding.GetBytes(text);
             var size = textBytes.Length;
 
             byte[] preBuffer = BitConverter.GetBytes(size);
@@ -406,7 +417,7 @@ namespace NSQnet
             return output;
         }
 
-        private static Byte[] PackMessage(FrameType type, String text)
+        private Byte[] PackMessage(FrameType type, String text)
         {
             byte[] textBytes = ConvertToAscii(text, this.StringEncoding);
             var size = textBytes.Length;
@@ -425,7 +436,7 @@ namespace NSQnet
             return output;
         }
 
-        private static NSQMessage UnpackMessage(Int32 size, Byte[] buffer)
+        private NSQMessage UnpackMessage(Int32 size, Byte[] buffer)
         {
             byte[] frameTypeBuffer = new Byte[4];
             Array.Copy(buffer, frameTypeBuffer, 4);
@@ -467,9 +478,9 @@ namespace NSQnet
                 length = size - cursor;
                 byte[] bodyBuffer = new Byte[length];
                 Array.Copy(buffer, cursor, bodyBuffer, 0, length);
-                String body = ConvertFromAscii(bodyBuffer);
+                String body = this.StringEncoding.GetString(bodyBuffer);
 
-                return new NSQMessage() { Size = size, FrameType = frameType, TimeStamp = new DateTime(timestamp), Attempts = attempts, MessageId = messageId, Body = body };
+                return new NSQMessage() { Size = size, FrameType = frameType, TimeStamp = EPOCH + new TimeSpan(timestamp / 100), Attempts = attempts, MessageId = messageId, Body = body };
             }
         }
 
