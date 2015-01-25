@@ -65,7 +65,6 @@ namespace NSQnet.CLI
             nsq.MessageHandler = (sender, e) =>
             {
                 var sub = sender as NSQSubscriber;
-                var main_subscription = sub.Subscriptions.FirstOrDefault();
 
                 if (e.Message.Body.Length != 84)
                 {
@@ -82,7 +81,10 @@ namespace NSQnet.CLI
             {
                 var sub = (sender as NSQSubscriber);
                 var main_subscription = sub.Subscriptions.FirstOrDefault();
-                Console.WriteLine(String.Format("{0}::{2}.{1} Disconnected", sub.Hostname, main_subscription.Channel, main_subscription.Topic));
+
+                lock(_consoleLock) {
+                    Console.WriteLine(String.Format("{0}::{2}.{1} Disconnected", sub.Hostname, main_subscription.Channel, main_subscription.Topic));
+                }
             };
             
             nsq.Topics.Add("load_test");
@@ -97,7 +99,9 @@ namespace NSQnet.CLI
 
                     if (delta != 0)
                     {
-                        Console.WriteLine(String.Format("Processed {0} Messages at a rate of {1} m/sec", processed, rate));
+                        lock(_consoleLock) {
+                            Console.WriteLine(String.Format("Processed {0} Messages at a rate of {1} m/sec", processed, rate));
+                        }
                         last_timestamp = DateTime.Now;
                         last_processed = processed;
                     }

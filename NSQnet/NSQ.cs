@@ -11,7 +11,7 @@ namespace NSQnet
     /// <summary>
     /// This class listens to the NSQ Lookup server and dispatches messages to handlers. 
     /// </summary>
-    public class NSQ
+    public class NSQ : IDisposable
     {
         public NSQ() 
         {
@@ -52,6 +52,8 @@ namespace NSQnet
         public HashSet<String> Topics { get; set; }
         public IEnumerable<String> AvailableTopics { get { return _lookupClient.Topics(); } }
 
+        private bool _continue = true;
+
         private NSQLookup _lookupClient { get; set; }
         private ConcurrentDictionary<String, NSQSubscriber> _mappedSubscribers = new ConcurrentDictionary<String, NSQSubscriber>();
 
@@ -65,10 +67,12 @@ namespace NSQnet
                 throw new InvalidOperationException("_lookup client hasn't been initialized; can't start listening.");
             }
 
+            _continue = true;
+
             var up = _lookupClient.Ping();
             if (up)
             {
-                while (true)
+                while (_continue)
                 {
                     _checkForNewProducers();
                     Thread.Sleep(PollEveryMilliseconds);
@@ -144,6 +148,14 @@ namespace NSQnet
             sub.ResetReadyCount();
 
             return sub;
+        }
+
+        public void StopListening() {
+            _continue = false;
+        }
+
+        public void Dispose() {
+            StopListening();
         }
     }
 }
