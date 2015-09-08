@@ -159,8 +159,9 @@ namespace NSQnet
         {
             System.Threading.Interlocked.Decrement(ref _readyCount);
 
-            if (_readyCount == 0)
+            if (_readyCount <= 0)
             {
+                // possible race condition
                 return;
             }
             
