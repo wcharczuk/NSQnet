@@ -128,6 +128,11 @@ namespace NSQnet
         /// </summary>
         public void UpdateReadyCount()
         {
+            if (_readyCount <= 0)
+            {
+                return;
+            }
+
             _protocol.Ready(_readyCount);
         }
 
@@ -161,7 +166,6 @@ namespace NSQnet
 
             if (_readyCount <= 0)
             {
-                // possible race condition
                 return;
             }
             
