@@ -98,7 +98,7 @@ namespace NSQnet
 
                         if (!_mappedSubscribers.ContainsKey(addr))
                         {
-                            var sub = _getSubscriber(addr, addr, addr, (int) producer.TCP_Port, topic);
+                            var sub = _getSubscriber(addr, addr, addr, (int)producer.TCP_Port, topic, channel);
                             _mappedSubscribers.AddOrUpdate(sub.LongIdentifier, sub, (long_id, oldSub) => sub);
                         }
                         else if (!_mappedSubscribers[addr].IsSubscribed(topic, channel))

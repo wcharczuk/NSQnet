@@ -162,13 +162,17 @@ namespace NSQnet
 
         private void OnNSQMessageRecieved(NSQMessageEventArgs e)
         {
-            System.Threading.Interlocked.Decrement(ref _readyCount);
-
             if (_readyCount <= 0)
             {
                 return;
             }
-            
+
+            if (System.Threading.Interlocked.Decrement(ref _readyCount) < 0)
+            {
+                System.Threading.Volatile.Write(ref _readyCount, 0);
+                return;
+            }
+
             System.Threading.Interlocked.Increment(ref _processingCount);
 
             var handler = this.NSQMessageRecieved;
@@ -177,6 +181,7 @@ namespace NSQnet
 
             System.Threading.Interlocked.Decrement(ref _processingCount);
             System.Threading.Interlocked.Increment(ref _readyCount);
+
             UpdateReadyCount();
         }
         #endregion
