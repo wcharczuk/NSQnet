@@ -60,7 +60,7 @@ namespace NSQnet
         /// <summary>
         /// Start listening to the Lookup server to see if there are new producers for topics. Will block the current thread.
         /// </summary>
-        public void Listen()
+        public void Listen(String channel)
         {
             if (_lookupClient == null)
             {
@@ -74,7 +74,7 @@ namespace NSQnet
             {
                 while (_continue)
                 {
-                    _checkForNewProducers();
+                    _checkForNewProducers(channel);
                     Thread.Sleep(PollEveryMilliseconds);
                 }
             }
@@ -84,7 +84,7 @@ namespace NSQnet
             }
         }
 
-        private void _checkForNewProducers()
+        private void _checkForNewProducers(string channel)
         {
             var topics = _lookupClient.Topics();
 
@@ -98,12 +98,12 @@ namespace NSQnet
 
                         if (!_mappedSubscribers.ContainsKey(addr))
                         {
-                            var sub = _getSubscriber(addr, addr, addr, (int) producer.TCP_Port, topic);
+                            var sub = _getSubscriber(addr, addr, addr, (int)producer.TCP_Port, topic, channel);
                             _mappedSubscribers.AddOrUpdate(sub.LongIdentifier, sub, (long_id, oldSub) => sub);
                         }
-                        else if (!_mappedSubscribers[addr].IsSubscribed(topic, topic))
+                        else if (!_mappedSubscribers[addr].IsSubscribed(topic, channel))
                         {
-                            _mappedSubscribers[addr].Subscribe(topic, topic);
+                            _mappedSubscribers[addr].Subscribe(topic, channel);
                         }
                     }
                 }
